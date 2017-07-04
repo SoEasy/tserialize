@@ -1,5 +1,4 @@
 import { JsonNameMetadataKey } from './metadata-key';
-import {unwrapParentheses} from 'tslint';
 
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
