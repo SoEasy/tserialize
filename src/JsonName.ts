@@ -10,7 +10,7 @@ import { JsonNameMetadataKey } from './metadata-key';
  */
 export function JsonName<T>(
     name?: string,
-    serialize?: (obj: T) => any,
+    serialize?: (obj: T, instance: any) => any,
     deserialize?: (serverObj: any, cls: { new (...args: Array<any>): T }) => T
 ): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {

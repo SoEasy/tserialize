@@ -8,7 +8,7 @@
   * @param serialize - функция, сериализующая значение поля для отправки на сервер или что-то с ним делающая.
   * @param deserialize - функция, разбирающая значение от сервера
   */
-export function JsonName<T>(name?: string, serialize?: (obj: T) => any, deserialize?: (serverObj: any, cls: {
+export function JsonName<T>(name?: string, serialize?: (obj: T, instance: any) => any, deserialize?: (serverObj: any, cls: {
     new (...args: Array<any>): T;
 }) => T): (target: object, propertyKey: string) => void;
 
