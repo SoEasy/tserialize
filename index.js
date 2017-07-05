@@ -98,7 +98,7 @@ var metadata_key_1 = __webpack_require__(0);
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
  *     сериализовать/десериализовать. Поле в классе обязательно должно иметь начальное значение, хоть null.
  *     Неинициированные поля не будут обработаны декоратором.
- * @param name - название поля для JSONRPC-запроса/ответа. В нотации snake_case.
+ * @param name - название поля для JSONRPC-запроса/ответа.
  * @param serialize - функция, сериализующая значение поля для отправки на сервер или что-то с ним делающая.
  * @param deserialize - функция, разбирающая значение от сервера
  */
@@ -110,6 +110,15 @@ function JsonName(name, serialize, deserialize) {
     };
 }
 exports.JsonName = JsonName;
+/**
+ * @description Декоратор для поля, которое ни при каких обстоятельствах не поедет в сериализованный объект
+ * @param name - название поля, из которого при десериализации взять данные
+ * @param deserialize - функция-десериализатор
+ */
+function JsonNameReadonly(name, deserialize) {
+    return JsonName.call(null, name, function () { return null; }, deserialize);
+}
+exports.JsonNameReadonly = JsonNameReadonly;
 
 
 /***/ }),
@@ -192,6 +201,7 @@ exports.serialize = serialize;
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(1);
 exports.JsonName = JsonName_1.JsonName;
+exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
 var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(2);
