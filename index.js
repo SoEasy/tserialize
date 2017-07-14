@@ -174,8 +174,6 @@ function serialize(model) {
     var result = {};
     var target = Object.getPrototypeOf(model);
     for (var propName in model) {
-        if (!Object.prototype.hasOwnProperty.call(model, propName))
-            continue;
         var serializeProps = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target, propName);
         if (serializeProps) {
             var serialize_1 = serializeProps.serialize;
