@@ -10,7 +10,6 @@ export function serialize(model: { [key: string]: any }): object {
     const result = {};
     const target = Object.getPrototypeOf(model);
     for (const propName in model) {
-        if (!Object.prototype.hasOwnProperty.call(model, propName)) continue;
         const serializeProps = (Reflect as any).getMetadata(JsonNameMetadataKey, target, propName);
         if (serializeProps) {
             const serialize = serializeProps.serialize;
