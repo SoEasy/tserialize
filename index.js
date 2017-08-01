@@ -96,6 +96,45 @@ exports.ParentKey = '@JsonNameParentKey';
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
 /**
+ * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
+ *     поля, у которых есть декоратор и задано начальное значение.
+ * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
+ * @returns {{}} - обычный объект JS
+ */
+function serialize(model) {
+    var result = {};
+    var target = Object.getPrototypeOf(model);
+    for (var propName in model) {
+        var serializeProps = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target, propName);
+        if (serializeProps) {
+            var serialize_1 = serializeProps.serialize;
+            var jsonName = serializeProps.name;
+            var jsonValue = model[propName];
+            var serializedValue = serialize_1 ? serialize_1(jsonValue, model) : jsonValue;
+            if (![null, undefined].includes(serializedValue)) {
+                if (jsonName !== metadata_key_1.ParentKey) {
+                    result[jsonName] = serializedValue;
+                }
+                else {
+                    Object.assign(result, serializedValue);
+                }
+            }
+        }
+    }
+    return result;
+}
+exports.serialize = serialize;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var metadata_key_1 = __webpack_require__(0);
+/**
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
  *     сериализовать/десериализовать. Поле в классе обязательно должно иметь начальное значение, хоть null.
  *     Неинициированные поля не будут обработаны декоратором.
@@ -123,7 +162,7 @@ exports.JsonNameReadonly = JsonNameReadonly;
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -158,52 +197,14 @@ exports.deserialize = deserialize;
 
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var metadata_key_1 = __webpack_require__(0);
-/**
- * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
- *     поля, у которых есть декоратор и задано начальное значение.
- * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
- * @returns {{}} - обычный объект JS
- */
-function serialize(model) {
-    var result = {};
-    var target = Object.getPrototypeOf(model);
-    for (var propName in model) {
-        var serializeProps = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target, propName);
-        if (serializeProps) {
-            var serialize_1 = serializeProps.serialize;
-            var jsonName = serializeProps.name;
-            var jsonValue = model[propName];
-            var serializedValue = serialize_1 ? serialize_1(jsonValue, model) : jsonValue;
-            if (![null, undefined].includes(serializedValue)) {
-                if (jsonName !== metadata_key_1.ParentKey) {
-                    result[jsonName] = serializedValue;
-                }
-                else {
-                    Object.assign(result, serializedValue);
-                }
-            }
-        }
-    }
-    return result;
-}
-exports.serialize = serialize;
-
-
-/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function noChangeSerializer(value) { return value; }
+var serialize_1 = __webpack_require__(1);
+function noChangeSerializer(value) { return serialize_1.serialize(value); }
 exports.noChangeSerializer = noChangeSerializer;
 
 
@@ -214,12 +215,12 @@ exports.noChangeSerializer = noChangeSerializer;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonName_1 = __webpack_require__(1);
+var JsonName_1 = __webpack_require__(2);
 exports.JsonName = JsonName_1.JsonName;
 exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
-var serialize_1 = __webpack_require__(3);
+var serialize_1 = __webpack_require__(1);
 exports.serialize = serialize_1.serialize;
-var deserialize_1 = __webpack_require__(2);
+var deserialize_1 = __webpack_require__(3);
 exports.deserialize = deserialize_1.deserialize;
 var metadata_key_1 = __webpack_require__(0);
 exports.ParentKey = metadata_key_1.ParentKey;
