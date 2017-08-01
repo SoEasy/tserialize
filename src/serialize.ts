@@ -1,4 +1,4 @@
-import { JsonNameMetadataKey } from './metadata-key';
+import { JsonNameMetadataKey, ParentKey } from './metadata-key';
 
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
@@ -17,7 +17,11 @@ export function serialize(model: { [key: string]: any }): object {
             const jsonValue = model[propName];
             const serializedValue = serialize ? serialize(jsonValue, model) : jsonValue;
             if (![null, undefined].includes(serializedValue)) {
-                result[jsonName] = serializedValue;
+                if (jsonName !== ParentKey) {
+                    result[jsonName] = serializedValue;
+                } else {
+                    Object.assign(result, serializedValue);
+                }
             }
         }
     }

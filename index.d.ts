@@ -40,3 +40,8 @@ export function deserialize<T>(data: any, cls: {
     new (...args: Array<any>): T;
 }): T;
 
+export const JsonNameMetadataKey = "JsonName";
+export const ParentKey = "@JsonNameParentKey";
+
+export function noChangeSerializer(value: any): any;
+

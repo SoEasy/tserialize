@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -84,6 +84,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JsonNameMetadataKey = 'JsonName';
+exports.ParentKey = '@JsonNameParentKey';
 
 
 /***/ }),
@@ -145,7 +146,7 @@ function deserialize(data, cls) {
         if (serializeProps) {
             var deserialize_1 = serializeProps.deserialize;
             var jsonName = serializeProps.name;
-            var jsonValue = data[jsonName];
+            var jsonValue = jsonName !== metadata_key_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
                 retVal[propName] = deserialize_1 ? deserialize_1(jsonValue) : jsonValue;
             }
@@ -181,7 +182,12 @@ function serialize(model) {
             var jsonValue = model[propName];
             var serializedValue = serialize_1 ? serialize_1(jsonValue, model) : jsonValue;
             if (![null, undefined].includes(serializedValue)) {
-                result[jsonName] = serializedValue;
+                if (jsonName !== metadata_key_1.ParentKey) {
+                    result[jsonName] = serializedValue;
+                }
+                else {
+                    Object.assign(result, serializedValue);
+                }
             }
         }
     }
@@ -197,6 +203,17 @@ exports.serialize = serialize;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+function noChangeSerializer(value) { return value; }
+exports.noChangeSerializer = noChangeSerializer;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(1);
 exports.JsonName = JsonName_1.JsonName;
 exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
@@ -204,6 +221,10 @@ var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(2);
 exports.deserialize = deserialize_1.deserialize;
+var metadata_key_1 = __webpack_require__(0);
+exports.ParentKey = metadata_key_1.ParentKey;
+var utils_1 = __webpack_require__(4);
+exports.noChangeSerializer = utils_1.noChangeSerializer;
 
 
 /***/ })

@@ -1,6 +1,6 @@
 {
   "name": "tserialize",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "TypeScript serialize utils",
   "types": "index.d.ts",
   "typescript": {
