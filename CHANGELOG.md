@@ -48,3 +48,6 @@ const instance = ServerModel.fromServer(data);
 const newData = instance.toServer();
 // { id: 1, os: 'MacOS', isWeb: true }
 ```
+
+# 1.0.5
+- Удалил hasOwnProperty в десериализаторе - он не важен, но мешает жить при других декораторах на свойстве

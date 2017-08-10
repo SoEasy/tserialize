@@ -11,7 +11,6 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T })
     const target = Object.getPrototypeOf(retVal);
 
     for (const propName in retVal) {
-        if (!Object.prototype.hasOwnProperty.call(retVal, propName)) continue;
         const serializeProps = (Reflect as any).getMetadata(JsonNameMetadataKey, target, propName);
         if (serializeProps) {
             const deserialize = serializeProps.deserialize;

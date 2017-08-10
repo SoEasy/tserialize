@@ -179,8 +179,6 @@ function deserialize(data, cls) {
     var retVal = new cls();
     var target = Object.getPrototypeOf(retVal);
     for (var propName in retVal) {
-        if (!Object.prototype.hasOwnProperty.call(retVal, propName))
-            continue;
         var serializeProps = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target, propName);
         if (serializeProps) {
             var deserialize_1 = serializeProps.deserialize;
