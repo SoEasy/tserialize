@@ -1,2 +1,2 @@
-export const JsonNameMetadataKey = 'JsonName';
-export const ParentKey = '@JsonNameParentKey';
+export const JsonNameMetadataKey: string = 'JsonName';
+export const ParentKey: string = '@JsonNameParentKey';

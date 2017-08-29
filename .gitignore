@@ -47,3 +47,8 @@ fabric.properties
 
 /npm-debug.log
 /node_modules/
+
+sample/index.d.ts
+sample/node_modules/
+sample/bundle.js
+sample/bundle.js.map

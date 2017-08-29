@@ -12,14 +12,14 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noImplicitThis": true,
+    "noImplicitThis": false,
     "lib": [
       "dom",
       "es7"
     ],
-    "baseUrl": "./src"
+    "baseUrl": "./"
   },
   "files": [
-    "src/index.ts"
+    "index.ts"
   ]
 }

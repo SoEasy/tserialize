@@ -104,15 +104,19 @@ var metadata_key_1 = __webpack_require__(0);
 function serialize(model) {
     var result = {};
     var target = Object.getPrototypeOf(model);
-    for (var propName in model) {
-        var serializeProps = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target, propName);
+    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+    for (var propertyKey in model) {
+        var serializeProps = metaStore.getPropertyMeta(propertyKey);
         if (serializeProps) {
-            var serialize_1 = serializeProps.serialize;
-            var jsonName = serializeProps.name;
-            var jsonValue = model[propName];
-            var serializedValue = serialize_1 ? serialize_1(jsonValue, model) : jsonValue;
+            var serializer = serializeProps.serialize;
+            var jsonName = serializeProps.targetKey;
+            var isNestedProp = jsonName === metadata_key_1.ParentKey;
+            var jsonValue = model[propertyKey];
+            var serializedValue = serializer
+                ? serializer(jsonValue, model)
+                : (isNestedProp ? serialize(jsonValue) : jsonValue);
             if (![null, undefined].includes(serializedValue)) {
-                if (jsonName !== metadata_key_1.ParentKey) {
+                if (!isNestedProp) {
                     result[jsonName] = serializedValue;
                 }
                 else {
@@ -134,6 +138,7 @@ exports.serialize = serialize;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
+var meta_store_1 = __webpack_require__(6);
 /**
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
  *     сериализовать/десериализовать. Поле в классе обязательно должно иметь начальное значение, хоть null.
@@ -144,9 +149,14 @@ var metadata_key_1 = __webpack_require__(0);
  */
 function JsonName(name, serialize, deserialize) {
     return function (target, propertyKey) {
-        name = name ? name : propertyKey;
+        if (!Reflect.hasMetadata(metadata_key_1.JsonNameMetadataKey, target)) {
+            Reflect.defineMetadata(metadata_key_1.JsonNameMetadataKey, new meta_store_1.MetaStore(), target);
+        }
+        var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+        var targetKey = name ? name : propertyKey;
+        metaStore.addProperty(propertyKey, targetKey, target, serialize, deserialize);
         // (Reflect as any) - typo-хак, пока конфликтуют reflect-metadata и ES6 Reflect
-        Reflect.defineMetadata(metadata_key_1.JsonNameMetadataKey, { name: name, serialize: serialize, deserialize: deserialize }, target, propertyKey);
+        // (Reflect as any).defineMetadata(JsonNameMetadataKey, { name, serialize, deserialize }, target, propertyKey);
     };
 }
 exports.JsonName = JsonName;
@@ -178,14 +188,16 @@ var metadata_key_1 = __webpack_require__(0);
 function deserialize(data, cls) {
     var retVal = new cls();
     var target = Object.getPrototypeOf(retVal);
-    for (var propName in retVal) {
-        var serializeProps = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target, propName);
+    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+    for (var _i = 0, _a = metaStore.getPropertyKeys(); _i < _a.length; _i++) {
+        var propertyKey = _a[_i];
+        var serializeProps = metaStore.getPropertyMeta(propertyKey);
         if (serializeProps) {
             var deserialize_1 = serializeProps.deserialize;
-            var jsonName = serializeProps.name;
+            var jsonName = serializeProps.targetKey;
             var jsonValue = jsonName !== metadata_key_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[propName] = deserialize_1 ? deserialize_1(jsonValue) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue) : jsonValue;
             }
         }
     }
@@ -224,6 +236,51 @@ var metadata_key_1 = __webpack_require__(0);
 exports.ParentKey = metadata_key_1.ParentKey;
 var utils_1 = __webpack_require__(4);
 exports.noChangeSerializer = utils_1.noChangeSerializer;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var MetaStore = (function () {
+    function MetaStore() {
+        this.propertiesMetaStore = {};
+        this.keyPropertyInversion = {};
+        this.propertyKeys = [];
+    }
+    MetaStore.prototype.addProperty = function (propertyKey, targetKey, proto, serialize, deserialize) {
+        if (this.propertiesMetaStore[propertyKey]) {
+            console.warn("Property \"" + propertyKey + "\" already have metadata for serialization");
+        }
+        this.propertiesMetaStore[propertyKey] = {
+            propertyKey: propertyKey,
+            targetKey: targetKey,
+            proto: proto,
+            serialize: serialize,
+            deserialize: deserialize
+        };
+        this.propertyKeys.push(propertyKey);
+        if (this.keyPropertyInversion[targetKey]) {
+            console.warn("Target key \"" + targetKey + "\" already taken");
+        }
+        this.keyPropertyInversion[targetKey] = propertyKey;
+    };
+    MetaStore.prototype.getPropertyMeta = function (propertyKey) {
+        return this.propertiesMetaStore[propertyKey];
+    };
+    MetaStore.prototype.getPropertyKeys = function () {
+        return this.propertyKeys;
+    };
+    MetaStore.prototype.getTargetKeyMeta = function (targetKey) {
+        var propertyKey = this.keyPropertyInversion[targetKey];
+        return propertyKey ? this.propertiesMetaStore[propertyKey] : null;
+    };
+    return MetaStore;
+}());
+exports.MetaStore = MetaStore;
 
 
 /***/ })

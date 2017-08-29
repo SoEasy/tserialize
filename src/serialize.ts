@@ -1,4 +1,5 @@
 import { JsonNameMetadataKey, ParentKey } from './metadata-key';
+import { MetaStore } from './meta-store';
 
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
@@ -9,15 +10,20 @@ import { JsonNameMetadataKey, ParentKey } from './metadata-key';
 export function serialize(model: { [key: string]: any }): object {
     const result = {};
     const target = Object.getPrototypeOf(model);
-    for (const propName in model) {
-        const serializeProps = (Reflect as any).getMetadata(JsonNameMetadataKey, target, propName);
+    const metaStore: MetaStore = (Reflect as any).getMetadata(JsonNameMetadataKey, target);
+
+    for (const propertyKey in model) {
+        const serializeProps = metaStore.getPropertyMeta(propertyKey);
         if (serializeProps) {
-            const serialize = serializeProps.serialize;
-            const jsonName = serializeProps.name;
-            const jsonValue = model[propName];
-            const serializedValue = serialize ? serialize(jsonValue, model) : jsonValue;
+            const serializer = serializeProps.serialize;
+            const jsonName = serializeProps.targetKey;
+            const isNestedProp = jsonName === ParentKey;
+            const jsonValue = model[propertyKey];
+            const serializedValue = serializer
+                ? serializer(jsonValue, model)
+                : (isNestedProp ? serialize(jsonValue) : jsonValue);
             if (![null, undefined].includes(serializedValue)) {
-                if (jsonName !== ParentKey) {
+                if (!isNestedProp) {
                     result[jsonName] = serializedValue;
                 } else {
                     Object.assign(result, serializedValue);

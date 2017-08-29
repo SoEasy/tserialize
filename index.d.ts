@@ -8,17 +8,13 @@
     * @param serialize - функция, сериализующая значение поля для отправки на сервер или что-то с ним делающая.
     * @param deserialize - функция, разбирающая значение от сервера
     */
-export function JsonName<T>(name?: string, serialize?: (obj: T, instance: any) => any, deserialize?: (serverObj: any, cls: {
-        new (...args: Array<any>): T;
-}) => T): (target: object, propertyKey: string) => void;
+export function JsonName<T>(name?: string, serialize?: (obj: T, instance: any) => any, deserialize?: (serverObj: any) => T): (target: object, propertyKey: string) => void;
 /**
     * @description Декоратор для поля, которое ни при каких обстоятельствах не поедет в сериализованный объект
     * @param name - название поля, из которого при десериализации взять данные
     * @param deserialize - функция-десериализатор
     */
-export function JsonNameReadonly<T>(name?: string, deserialize?: (serverObj: any, cls: {
-        new (...args: Array<any>): T;
-}) => T): (target: object, propertyKey: string) => void;
+export function JsonNameReadonly<T>(name?: string, deserialize?: (serverObj: any) => T): (target: object, propertyKey: string) => void;
 
 /**
   * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
@@ -40,8 +36,8 @@ export function deserialize<T>(data: any, cls: {
     new (...args: Array<any>): T;
 }): T;
 
-export const JsonNameMetadataKey = "JsonName";
-export const ParentKey = "@JsonNameParentKey";
+export const JsonNameMetadataKey: string;
+export const ParentKey: string;
 
 export function noChangeSerializer(value: any): any;
 
