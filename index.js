@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -95,50 +95,7 @@ exports.ParentKey = '@JsonNameParentKey';
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
-/**
- * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
- *     поля, у которых есть декоратор и задано начальное значение.
- * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
- * @returns {{}} - обычный объект JS
- */
-function serialize(model) {
-    var result = {};
-    var target = Object.getPrototypeOf(model);
-    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
-    for (var propertyKey in model) {
-        var serializeProps = metaStore.getPropertyMeta(propertyKey);
-        if (serializeProps) {
-            var serializer = serializeProps.serialize;
-            var jsonName = serializeProps.targetKey;
-            var isNestedProp = jsonName === metadata_key_1.ParentKey;
-            var jsonValue = model[propertyKey];
-            var serializedValue = serializer
-                ? serializer(jsonValue, model)
-                : (isNestedProp ? serialize(jsonValue) : jsonValue);
-            if (![null, undefined].includes(serializedValue)) {
-                if (!isNestedProp) {
-                    result[jsonName] = serializedValue;
-                }
-                else {
-                    Object.assign(result, serializedValue);
-                }
-            }
-        }
-    }
-    return result;
-}
-exports.serialize = serialize;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var metadata_key_1 = __webpack_require__(0);
-var meta_store_1 = __webpack_require__(6);
+var meta_store_1 = __webpack_require__(5);
 /**
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
  *     сериализовать/десериализовать. Поле в классе обязательно должно иметь начальное значение, хоть null.
@@ -154,9 +111,7 @@ function JsonName(name, serialize, deserialize) {
         }
         var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
         var targetKey = name ? name : propertyKey;
-        metaStore.addProperty(propertyKey, targetKey, target, serialize, deserialize);
-        // (Reflect as any) - typo-хак, пока конфликтуют reflect-metadata и ES6 Reflect
-        // (Reflect as any).defineMetadata(JsonNameMetadataKey, { name, serialize, deserialize }, target, propertyKey);
+        metaStore.addProperty(propertyKey, targetKey, false, serialize, deserialize);
     };
 }
 exports.JsonName = JsonName;
@@ -169,10 +124,36 @@ function JsonNameReadonly(name, deserialize) {
     return JsonName.call(null, name, function () { return null; }, deserialize);
 }
 exports.JsonNameReadonly = JsonNameReadonly;
+function JsonStruct(proto, name) {
+    return function (target, propertyKey) {
+        if (!proto.fromServer) {
+            console.warn("JsonStruct field " + propertyKey + " class not contains static method \"fromServer\"");
+        }
+        if (!Reflect.hasMetadata(metadata_key_1.JsonNameMetadataKey, target)) {
+            Reflect.defineMetadata(metadata_key_1.JsonNameMetadataKey, new meta_store_1.MetaStore(), target);
+        }
+        var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+        var targetKey = name ? name : propertyKey;
+        var deserializer;
+        if (proto.fromServer) {
+            deserializer = proto.fromServer;
+        }
+        else {
+            deserializer = function (value) { return value; };
+            console.warn("Static method \"fromServer\" is not defined for nested class " + proto.name);
+        }
+        metaStore.addProperty(propertyKey, targetKey, true, null, deserializer);
+    };
+}
+exports.JsonStruct = JsonStruct;
+function JsonMeta(proto) {
+    return JsonStruct.call(null, proto, metadata_key_1.ParentKey);
+}
+exports.JsonMeta = JsonMeta;
 
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -207,39 +188,78 @@ exports.deserialize = deserialize;
 
 
 /***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var metadata_key_1 = __webpack_require__(0);
+/**
+ * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
+ *     поля, у которых есть декоратор и задано начальное значение.
+ * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
+ * @returns {{}} - обычный объект JS
+ */
+function serialize(model) {
+    var result = {};
+    var target = Object.getPrototypeOf(model);
+    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+    for (var propertyKey in model) {
+        var serializeProps = metaStore.getPropertyMeta(propertyKey);
+        if (serializeProps) {
+            var jsonName = serializeProps.targetKey;
+            var isNestedProp = jsonName === metadata_key_1.ParentKey;
+            var jsonValue = model[propertyKey];
+            var serializedValue = null;
+            if (serializeProps.struct) {
+                if (jsonValue && !jsonValue.toServer) {
+                    console.warn("Method \"toServer\" is not defined for nested class " + jsonValue.constructor.name);
+                }
+                var serializer = jsonValue ? jsonValue.toServer : null;
+                serializedValue = serializer ? serializer.call(jsonValue) : null;
+            }
+            else {
+                var serializer = serializeProps.serialize;
+                serializedValue = serializer
+                    ? serializer(jsonValue, model)
+                    : (isNestedProp ? serialize(jsonValue) : jsonValue);
+            }
+            if (![null, undefined].includes(serializedValue)) {
+                if (!isNestedProp) {
+                    result[jsonName] = serializedValue;
+                }
+                else {
+                    Object.assign(result, serializedValue);
+                }
+            }
+        }
+    }
+    return result;
+}
+exports.serialize = serialize;
+
+
+/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var serialize_1 = __webpack_require__(1);
-function noChangeSerializer(value) { return serialize_1.serialize(value); }
-exports.noChangeSerializer = noChangeSerializer;
+var JsonName_1 = __webpack_require__(1);
+exports.JsonName = JsonName_1.JsonName;
+exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
+exports.JsonStruct = JsonName_1.JsonStruct;
+exports.JsonMeta = JsonName_1.JsonMeta;
+var serialize_1 = __webpack_require__(3);
+exports.serialize = serialize_1.serialize;
+var deserialize_1 = __webpack_require__(2);
+exports.deserialize = deserialize_1.deserialize;
 
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var JsonName_1 = __webpack_require__(2);
-exports.JsonName = JsonName_1.JsonName;
-exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
-var serialize_1 = __webpack_require__(1);
-exports.serialize = serialize_1.serialize;
-var deserialize_1 = __webpack_require__(3);
-exports.deserialize = deserialize_1.deserialize;
-var metadata_key_1 = __webpack_require__(0);
-exports.ParentKey = metadata_key_1.ParentKey;
-var utils_1 = __webpack_require__(4);
-exports.noChangeSerializer = utils_1.noChangeSerializer;
-
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -251,14 +271,15 @@ var MetaStore = (function () {
         this.keyPropertyInversion = {};
         this.propertyKeys = [];
     }
-    MetaStore.prototype.addProperty = function (propertyKey, targetKey, proto, serialize, deserialize) {
+    MetaStore.prototype.addProperty = function (propertyKey, targetKey, struct, serialize, deserialize) {
+        if (struct === void 0) { struct = false; }
         if (this.propertiesMetaStore[propertyKey]) {
             console.warn("Property \"" + propertyKey + "\" already have metadata for serialization");
         }
         this.propertiesMetaStore[propertyKey] = {
             propertyKey: propertyKey,
             targetKey: targetKey,
-            proto: proto,
+            struct: struct,
             serialize: serialize,
             deserialize: deserialize
         };
@@ -267,6 +288,9 @@ var MetaStore = (function () {
             console.warn("Target key \"" + targetKey + "\" already taken");
         }
         this.keyPropertyInversion[targetKey] = propertyKey;
+    };
+    MetaStore.prototype.addStructProperty = function (propertyName, target) {
+        console.log('add struct property', propertyName, target, target.fromServer);
     };
     MetaStore.prototype.getPropertyMeta = function (propertyKey) {
         return this.propertiesMetaStore[propertyKey];

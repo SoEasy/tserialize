@@ -15,13 +15,24 @@ export function serialize(model: { [key: string]: any }): object {
     for (const propertyKey in model) {
         const serializeProps = metaStore.getPropertyMeta(propertyKey);
         if (serializeProps) {
-            const serializer = serializeProps.serialize;
             const jsonName = serializeProps.targetKey;
             const isNestedProp = jsonName === ParentKey;
             const jsonValue = model[propertyKey];
-            const serializedValue = serializer
-                ? serializer(jsonValue, model)
-                : (isNestedProp ? serialize(jsonValue) : jsonValue);
+            let serializedValue = null;
+
+            if (serializeProps.struct) {
+                if (jsonValue && !jsonValue.toServer) {
+                    console.warn(`Method "toServer" is not defined for nested class ${jsonValue.constructor.name}`);
+                }
+                const serializer = jsonValue ? jsonValue.toServer : null;
+                serializedValue = serializer ? serializer.call(jsonValue) : null;
+            } else {
+                const serializer = serializeProps.serialize;
+                serializedValue = serializer
+                    ? serializer(jsonValue, model)
+                    : (isNestedProp ? serialize(jsonValue) : jsonValue);
+            }
+
             if (![null, undefined].includes(serializedValue)) {
                 if (!isNestedProp) {
                     result[jsonName] = serializedValue;

@@ -1,5 +1,3 @@
-export { JsonName, JsonNameReadonly } from './JsonName';
+export { JsonName, JsonNameReadonly, JsonStruct, JsonMeta } from './JsonName';
 export { serialize } from './serialize';
 export { deserialize } from './deserialize';
-export { ParentKey } from './metadata-key';
-export { noChangeSerializer } from './utils';

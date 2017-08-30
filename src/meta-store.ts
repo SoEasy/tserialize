@@ -3,7 +3,7 @@ export interface PropertyMetadata {
     targetKey: string;
     serialize?: (value: any, instance: any) => any;
     deserialize?: (serverObj: any) => any;
-    proto: any;
+    struct: boolean;
 }
 
 export class MetaStore {
@@ -14,7 +14,7 @@ export class MetaStore {
     addProperty<T>(
         propertyKey: string,
         targetKey: string,
-        proto: any,
+        struct: boolean = false,
         serialize?: (obj: T, instance: any) => any,
         deserialize?: (serverObj: any) => T
     ): void {
@@ -25,7 +25,7 @@ export class MetaStore {
         this.propertiesMetaStore[propertyKey] = {
             propertyKey,
             targetKey,
-            proto,
+            struct,
             serialize,
             deserialize
         };
@@ -36,6 +36,10 @@ export class MetaStore {
             console.warn(`Target key "${targetKey}" already taken`);
         }
         this.keyPropertyInversion[targetKey] = propertyKey;
+    }
+
+    addStructProperty(propertyName: string, target: any): void {
+        console.log('add struct property', propertyName, target, target.fromServer);
     }
 
     getPropertyMeta(propertyKey: string): PropertyMetadata {
