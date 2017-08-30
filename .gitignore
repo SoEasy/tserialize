@@ -52,3 +52,5 @@ sample/index.d.ts
 sample/node_modules/
 sample/bundle.js
 sample/bundle.js.map
+
+test/**/*.d.ts
