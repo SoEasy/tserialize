@@ -77,3 +77,7 @@ export function JsonStruct(
 export function JsonMeta(proto: any): Decorator {
     return JsonStruct.call(null, proto, ParentKey);
 }
+
+export function JsonRaw(): Decorator {
+    throw new Error('Not implemented');
+}

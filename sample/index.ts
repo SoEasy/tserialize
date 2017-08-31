@@ -18,16 +18,12 @@ class Nested {
 }
 
 class Foo {
-    @JsonName<string>('bb', value => value.split('').reverse().join(''), value => `${value}!!!`)
-    bar: string;
-
-    @JsonMeta(Nested)
+    @JsonStruct(Nested, 'foo')
     n: Nested = new Nested();
 }
 
 const f = new Foo();
-f.bar = 'gello';
 f.n = new Nested();
 f.n.os = 'win';
+f.n.version = 2;
 console.log(serialize(f));
-console.log(deserialize({bb: 'gg1g', operationSystem: 'hello'}, Foo));
