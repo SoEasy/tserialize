@@ -19,9 +19,6 @@
     ],
     "baseUrl": "./src"
   },
-  "include": [
-    "test/**/*.ts"
-  ],
   "files": [
     "src/index.ts"
   ]

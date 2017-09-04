@@ -95,7 +95,43 @@ exports.ParentKey = '@JsonNameParentKey';
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
+/**
+ * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
+ * @param data - данные от сервера
+ * @param cls - класс, в экземпляр которого надо превратить данные
+ * @returns {T} - экземпляр класса cls, заполненный данными
+ */
+function deserialize(data, cls) {
+    var retVal = new cls();
+    var target = Object.getPrototypeOf(retVal);
+    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+    for (var _i = 0, _a = metaStore.getPropertyKeys(); _i < _a.length; _i++) {
+        var propertyKey = _a[_i];
+        var serializeProps = metaStore.getPropertyMeta(propertyKey);
+        if (serializeProps) {
+            var deserialize_1 = serializeProps.deserialize;
+            var jsonName = serializeProps.targetKey;
+            var jsonValue = jsonName !== metadata_key_1.ParentKey ? data[jsonName] : data;
+            if (typeof jsonValue !== 'undefined') {
+                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue) : jsonValue;
+            }
+        }
+    }
+    return retVal;
+}
+exports.deserialize = deserialize;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var metadata_key_1 = __webpack_require__(0);
 var meta_store_1 = __webpack_require__(5);
+var deserialize_1 = __webpack_require__(1);
 /**
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
  *     сериализовать/десериализовать. Поле в классе обязательно должно иметь начальное значение, хоть null.
@@ -126,22 +162,12 @@ function JsonNameReadonly(name, deserialize) {
 exports.JsonNameReadonly = JsonNameReadonly;
 function JsonStruct(proto, name) {
     return function (target, propertyKey) {
-        if (!proto.fromServer) {
-            console.warn("JsonStruct field " + propertyKey + " class not contains static method \"fromServer\"");
-        }
         if (!Reflect.hasMetadata(metadata_key_1.JsonNameMetadataKey, target)) {
             Reflect.defineMetadata(metadata_key_1.JsonNameMetadataKey, new meta_store_1.MetaStore(), target);
         }
         var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
         var targetKey = name ? name : propertyKey;
-        var deserializer;
-        if (proto.fromServer) {
-            deserializer = proto.fromServer;
-        }
-        else {
-            deserializer = function (value) { return value; };
-            console.warn("Static method \"fromServer\" is not defined for nested class " + proto.name);
-        }
+        var deserializer = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
         metaStore.addProperty(propertyKey, targetKey, true, null, deserializer);
     };
 }
@@ -150,41 +176,10 @@ function JsonMeta(proto) {
     return JsonStruct.call(null, proto, metadata_key_1.ParentKey);
 }
 exports.JsonMeta = JsonMeta;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var metadata_key_1 = __webpack_require__(0);
-/**
- * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
- * @param data - данные от сервера
- * @param cls - класс, в экземпляр которого надо превратить данные
- * @returns {T} - экземпляр класса cls, заполненный данными
- */
-function deserialize(data, cls) {
-    var retVal = new cls();
-    var target = Object.getPrototypeOf(retVal);
-    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
-    for (var _i = 0, _a = metaStore.getPropertyKeys(); _i < _a.length; _i++) {
-        var propertyKey = _a[_i];
-        var serializeProps = metaStore.getPropertyMeta(propertyKey);
-        if (serializeProps) {
-            var deserialize_1 = serializeProps.deserialize;
-            var jsonName = serializeProps.targetKey;
-            var jsonValue = jsonName !== metadata_key_1.ParentKey ? data[jsonName] : data;
-            if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue) : jsonValue;
-            }
-        }
-    }
-    return retVal;
+function JsonRaw() {
+    throw new Error('Not implemented');
 }
-exports.deserialize = deserialize;
+exports.JsonRaw = JsonRaw;
 
 
 /***/ }),
@@ -213,11 +208,8 @@ function serialize(model) {
             var jsonValue = model[propertyKey];
             var serializedValue = null;
             if (serializeProps.struct) {
-                if (jsonValue && !jsonValue.toServer) {
-                    console.warn("Method \"toServer\" is not defined for nested class " + jsonValue.constructor.name);
-                }
                 var serializer = jsonValue ? jsonValue.toServer : null;
-                serializedValue = serializer ? serializer.call(jsonValue) : null;
+                serializedValue = serializer ? serializer.call(jsonValue) : serialize(jsonValue);
             }
             else {
                 var serializer = serializeProps.serialize;
@@ -247,14 +239,14 @@ exports.serialize = serialize;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonName_1 = __webpack_require__(1);
+var JsonName_1 = __webpack_require__(2);
 exports.JsonName = JsonName_1.JsonName;
 exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
 exports.JsonStruct = JsonName_1.JsonStruct;
 exports.JsonMeta = JsonName_1.JsonMeta;
 var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
-var deserialize_1 = __webpack_require__(2);
+var deserialize_1 = __webpack_require__(1);
 exports.deserialize = deserialize_1.deserialize;
 
 

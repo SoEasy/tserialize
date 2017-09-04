@@ -21,11 +21,8 @@ export function serialize(model: { [key: string]: any }): object {
             let serializedValue = null;
 
             if (serializeProps.struct) {
-                if (jsonValue && !jsonValue.toServer) {
-                    console.warn(`Method "toServer" is not defined for nested class ${jsonValue.constructor.name}`);
-                }
                 const serializer = jsonValue ? jsonValue.toServer : null;
-                serializedValue = serializer ? serializer.call(jsonValue) : null;
+                serializedValue = serializer ? serializer.call(jsonValue) : serialize(jsonValue);
             } else {
                 const serializer = serializeProps.serialize;
                 serializedValue = serializer

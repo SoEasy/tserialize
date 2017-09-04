@@ -29,6 +29,6 @@ describe('JsonStruct without toServer case', () => {
     const serialized = serialize(instance);
 
     it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({});
+        expect(serialized).to.deep.equal({inner: { fieldToSerialize: referenceValue, customName: 2 } , customInner: {}});
     });
 });

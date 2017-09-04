@@ -1,7 +1,8 @@
 import { JsonNameMetadataKey, ParentKey } from './metadata-key';
 import { MetaStore } from 'meta-store';
+import { deserialize } from 'deserialize';
 
-export type Decorator = (target: object, propertyKey: string) => void
+export type Decorator = (target: object, propertyKey: string) => void;
 
 /**
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
@@ -49,21 +50,13 @@ export function JsonStruct(
     name?: string
 ): Decorator {
     return (target: object, propertyKey: string): void => {
-        if (!proto.fromServer) {
-            console.warn(`JsonStruct field ${propertyKey} class not contains static method "fromServer"`);
-        }
         if (!(Reflect as any).hasMetadata(JsonNameMetadataKey, target)) {
             (Reflect as any).defineMetadata(JsonNameMetadataKey, new MetaStore(), target);
         }
         const metaStore: MetaStore = (Reflect as any).getMetadata(JsonNameMetadataKey, target);
         const targetKey = name ? name : propertyKey;
-        let deserializer;
-        if (proto.fromServer) {
-            deserializer = proto.fromServer;
-        } else {
-            deserializer = (value): any => value;
-            console.warn(`Static method "fromServer" is not defined for nested class ${proto.name}`);
-        }
+        const deserializer = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
+
         metaStore.addProperty(
             propertyKey,
             targetKey,

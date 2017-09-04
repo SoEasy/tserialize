@@ -24,6 +24,6 @@ describe('JsonMeta without toServer case', () => {
     const serialized = serialize(instance);
 
     it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({});
+        expect(serialized).to.deep.equal({ fieldToSerialize: 'hello', customName: 2 });
     });
 });
