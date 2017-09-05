@@ -16,6 +16,12 @@ class BaseStructCase {
 
     @JsonStruct(InnerClass, 'customInner')
     inner2: InnerClass;
+
+    @JsonStruct(InnerClass)
+    inner3: InnerClass;
+
+    @JsonStruct(InnerClass)
+    inner4: InnerClass = null;
 }
 
 describe('JsonStruct without toServer case', () => {

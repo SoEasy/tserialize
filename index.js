@@ -209,7 +209,7 @@ function serialize(model) {
             var serializedValue = null;
             if (serializeProps.struct) {
                 var serializer = jsonValue ? jsonValue.toServer : null;
-                serializedValue = serializer ? serializer.call(jsonValue) : serialize(jsonValue);
+                serializedValue = serializer ? serializer.call(jsonValue) : (jsonValue ? serialize(jsonValue) : null);
             }
             else {
                 var serializer = serializeProps.serialize;

@@ -22,7 +22,7 @@ export function serialize(model: { [key: string]: any }): object {
 
             if (serializeProps.struct) {
                 const serializer = jsonValue ? jsonValue.toServer : null;
-                serializedValue = serializer ? serializer.call(jsonValue) : serialize(jsonValue);
+                serializedValue = serializer ? serializer.call(jsonValue) : (jsonValue ? serialize(jsonValue) : null);
             } else {
                 const serializer = serializeProps.serialize;
                 serializedValue = serializer
