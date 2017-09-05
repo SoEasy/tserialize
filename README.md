@@ -267,6 +267,7 @@ const instance = Computer.fromServer(data);
 
 ### JsonMeta
 Подобен JsonStruct, но данные берет не из ключа, а из исходного объекта. Нужен для преобразования плоских-композитных моделей.
+Например, объект чистых данных содержит овер9000 ключей, которые по логике относятся к разным сущностям. И вы, как хороший разработчик, хотите осуществить декомпозицию на мелкие самостоятельные сущности.
 
 ##### Сигнатура
 ```
@@ -282,7 +283,7 @@ class SysInfo {
     @JsonName('operation_system')
     name: string;
 
-    @JsonName()
+    @JsonName('os_version')
     version: number;
 }
 
@@ -298,7 +299,7 @@ class Computer {
     }
 }
 
-const data = { ram: 8, operation_system: 'Win', version: 10 }; // flat data
+const data = { ram: 8, operation_system: 'Win', os_version: 10 }; // flat data
 const instance = Computer.fromServer(data);
 // { ram: 8, os: { name: 'Win', version: 10 } } // composite model
 ```
