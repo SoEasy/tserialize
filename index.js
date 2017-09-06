@@ -130,6 +130,35 @@ exports.deserialize = deserialize;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
+var helpers_1 = __webpack_require__(6);
+/**
+ * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
+ *     поля, у которых есть декоратор и задано начальное значение.
+ * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
+ * @returns {{}} - обычный объект JS
+ */
+function serialize(model) {
+    var result = {};
+    var target = Object.getPrototypeOf(model);
+    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+    for (var propertyKey in model) {
+        var metadata = metaStore.getPropertyMeta(propertyKey);
+        var serializedValue = helpers_1.serializeValue(metadata, model[propertyKey], model);
+        helpers_1.assignSerializedValueToResult(metadata, serializedValue, result);
+    }
+    return result;
+}
+exports.serialize = serialize;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var metadata_key_1 = __webpack_require__(0);
 var meta_store_1 = __webpack_require__(5);
 var deserialize_1 = __webpack_require__(1);
 /**
@@ -183,68 +212,18 @@ exports.JsonRaw = JsonRaw;
 
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var metadata_key_1 = __webpack_require__(0);
-/**
- * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
- *     поля, у которых есть декоратор и задано начальное значение.
- * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
- * @returns {{}} - обычный объект JS
- */
-function serialize(model) {
-    var result = {};
-    var target = Object.getPrototypeOf(model);
-    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
-    for (var propertyKey in model) {
-        var serializeProps = metaStore.getPropertyMeta(propertyKey);
-        if (serializeProps) {
-            var jsonName = serializeProps.targetKey;
-            var isNestedProp = jsonName === metadata_key_1.ParentKey;
-            var jsonValue = model[propertyKey];
-            var serializedValue = null;
-            if (serializeProps.struct) {
-                var serializer = jsonValue ? jsonValue.toServer : null;
-                serializedValue = serializer ? serializer.call(jsonValue) : (jsonValue ? serialize(jsonValue) : null);
-            }
-            else {
-                var serializer = serializeProps.serialize;
-                serializedValue = serializer
-                    ? serializer(jsonValue, model)
-                    : (isNestedProp ? serialize(jsonValue) : jsonValue);
-            }
-            if (![null, undefined].includes(serializedValue)) {
-                if (!isNestedProp) {
-                    result[jsonName] = serializedValue;
-                }
-                else {
-                    Object.assign(result, serializedValue);
-                }
-            }
-        }
-    }
-    return result;
-}
-exports.serialize = serialize;
-
-
-/***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonName_1 = __webpack_require__(2);
+var JsonName_1 = __webpack_require__(3);
 exports.JsonName = JsonName_1.JsonName;
 exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
 exports.JsonStruct = JsonName_1.JsonStruct;
 exports.JsonMeta = JsonName_1.JsonMeta;
-var serialize_1 = __webpack_require__(3);
+var serialize_1 = __webpack_require__(2);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(1);
 exports.deserialize = deserialize_1.deserialize;
@@ -297,6 +276,45 @@ var MetaStore = (function () {
     return MetaStore;
 }());
 exports.MetaStore = MetaStore;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var metadata_key_1 = __webpack_require__(0);
+var serialize_1 = __webpack_require__(2);
+function serializeValue(metadata, value, instance) {
+    if (!metadata) {
+        return;
+    }
+    var jsonName = metadata.targetKey;
+    var isNestedProp = jsonName === metadata_key_1.ParentKey;
+    if (metadata.struct) {
+        var serializer = value ? value.toServer : null;
+        return serializer ? serializer.call(value) : (value ? serialize_1.serialize(value) : null);
+    }
+    else {
+        var serializer = metadata.serialize;
+        return serializer ? serializer(value, instance) : (isNestedProp ? serialize_1.serialize(value) : value);
+    }
+}
+exports.serializeValue = serializeValue;
+function assignSerializedValueToResult(metadata, serializedValue, result) {
+    if (![null, undefined].includes(serializedValue)) {
+        var jsonName = metadata.targetKey;
+        if (jsonName !== metadata_key_1.ParentKey) {
+            result[jsonName] = serializedValue;
+        }
+        else {
+            Object.assign(result, serializedValue);
+        }
+    }
+}
+exports.assignSerializedValueToResult = assignSerializedValueToResult;
 
 
 /***/ })
