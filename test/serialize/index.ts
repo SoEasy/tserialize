@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 import { serializeValue } from './../../src/serialize/helpers';
 import { PropertyMetadata } from './../../src/meta-store';
+import { JsonName } from './../..';
+import 'reflect-metadata';
 
 describe('serializeValue helper', () => {
     const defaultMeta: PropertyMetadata = {
@@ -12,6 +14,7 @@ describe('serializeValue helper', () => {
     };
 
     class TestClass {
+        @JsonName()
         prop: number = 1;
 
         toServer(): any {
@@ -47,21 +50,31 @@ describe('serializeValue helper', () => {
         expect(serializeValue(meta, t, null)).to.deep.equal({prop: 1});
     });
 
-    it('must serialize not null struct with custom serializer', () => {});
-
-    it('must serialize not null struct with default serializer', () => {});
-
-    it('must call custom serializer in them context', () => {
-        // const meta = {...defaultMeta, ...{serialize: ()}}
+    it('must serialize not null struct with default serializer', () => {
+        const t = new TestClass();
+        t.toServer = null;
+        const meta = {...defaultMeta, ...{struct: true}};
+        expect(serializeValue(meta, t, null)).to.deep.equal({prop: 1});
     });
 
-    it('must call custom serializer in them context which return null');
+    it('must call custom serializer in them context', () => {
+        const meta = {...defaultMeta, ...{serialize: (value, instance) => value + instance.foo}};
+        const instance = {foo: 1, bar: 2};
+        expect(serializeValue(meta, instance.bar, instance)).to.be.equal(3);
+    });
 
-    it('must serialize struct with custom serializer');
+    it('must call custom serializer which return null', () => {
+        const meta = {...defaultMeta, ...{serialize: () => null}};
+        expect(serializeValue(meta, 1, null)).to.be.null;
+    });
 
-    it('must serialize struct without custom serializer');
+    it('must serialize with custom serializer', () => {
+        const meta = {...defaultMeta, ...{serialize: () => 1}};
+        expect(serializeValue(meta, 2, null)).to.be.equal(1);
+    });
 
-    it('must serialize value with serializer in them context');
-
-    it('must serialize value without serializer');
+    it('must serialize value without serializer', () => {
+        const meta = defaultMeta;
+        expect(serializeValue(meta, 2, null)).to.be.equal(2);
+    });
 });

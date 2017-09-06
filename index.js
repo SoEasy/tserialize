@@ -291,15 +291,13 @@ function serializeValue(metadata, value, instance) {
     if (!metadata) {
         return;
     }
-    var jsonName = metadata.targetKey;
-    var isNestedProp = jsonName === metadata_key_1.ParentKey;
     if (metadata.struct) {
         var serializer = value ? value.toServer : null;
         return serializer ? serializer.call(value) : (value ? serialize_1.serialize(value) : null);
     }
     else {
         var serializer = metadata.serialize;
-        return serializer ? serializer(value, instance) : (isNestedProp ? serialize_1.serialize(value) : value);
+        return serializer ? serializer(value, instance) : value;
     }
 }
 exports.serializeValue = serializeValue;
