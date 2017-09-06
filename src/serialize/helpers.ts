@@ -7,15 +7,12 @@ export function serializeValue(metadata: PropertyMetadata, value: any, instance:
         return;
     }
 
-    const jsonName = metadata.targetKey;
-    const isNestedProp = jsonName === ParentKey;
-
     if (metadata.struct) {
         const serializer = value ? value.toServer : null;
         return serializer ? serializer.call(value) : (value ? serialize(value) : null);
     } else {
         const serializer = metadata.serialize;
-        return serializer ? serializer(value, instance) : (isNestedProp ? serialize(value) : value);
+        return serializer ? serializer(value, instance) : value;
     }
 }
 

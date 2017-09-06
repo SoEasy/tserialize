@@ -1,6 +1,6 @@
 import { JsonNameMetadataKey } from '../metadata-key';
 import { MetaStore } from '../meta-store';
-import { assignSerializedValueToResult, serializeValue } from 'serialize/helpers';
+import { assignSerializedValueToResult, serializeValue } from './helpers';
 
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
