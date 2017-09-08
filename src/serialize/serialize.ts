@@ -13,7 +13,8 @@ export function serialize(model: { [key: string]: any }): object {
     const target = Object.getPrototypeOf(model);
     const metaStore: MetaStore = (Reflect as any).getMetadata(JsonNameMetadataKey, target);
 
-    for (const propertyKey in model) {
+    const modelKeys = metaStore.getPropertyKeys();
+    for (const propertyKey of modelKeys) {
         const metadata = metaStore.getPropertyMeta(propertyKey);
         const serializedValue = serializeValue(metadata, model[propertyKey], model);
         assignSerializedValueToResult(metadata, serializedValue, result);

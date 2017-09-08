@@ -141,7 +141,9 @@ function serialize(model) {
     var result = {};
     var target = Object.getPrototypeOf(model);
     var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
-    for (var propertyKey in model) {
+    var modelKeys = metaStore.getPropertyKeys();
+    for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
+        var propertyKey = modelKeys_1[_i];
         var metadata = metaStore.getPropertyMeta(propertyKey);
         var serializedValue = helpers_1.serializeValue(metadata, model[propertyKey], model);
         helpers_1.assignSerializedValueToResult(metadata, serializedValue, result);
