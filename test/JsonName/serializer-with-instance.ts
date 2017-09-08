@@ -9,6 +9,13 @@ class SerializerWithInstanceCase {
     ignoredField: number;
 }
 
+class SerializerUndefinedValue {
+    @JsonName('nullField', (_, instance) => instance.ignoredField + 1)
+    nullField: number;
+
+    ignoredField: number = 2;
+}
+
 describe('Serializer with instance case', () => {
     const referenceValue = 'hello';
     const instance = new SerializerWithInstanceCase();
@@ -25,6 +32,22 @@ describe('Serializer with instance case', () => {
     });
 
     it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({fieldToSerialize: `${referenceValue}${instance.ignoredField}`});
+        expect(serialized).to.deep.equal({
+            fieldToSerialize: `${referenceValue}${instance.ignoredField}`,
+        });
     });
+
+    describe('Serializer with instance case upon undefined value', () => {
+        const v = new SerializerUndefinedValue();
+        const serialized = serialize(v);
+
+        it('should have property', () => {
+            expect(serialized).have.property('nullField');
+        });
+
+        it('should be correct', () => {
+            expect(serialized).to.deep.equal({nullField: 3});
+        });
+    });
+
 });
