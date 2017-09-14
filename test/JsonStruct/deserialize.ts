@@ -15,10 +15,10 @@ class InnerClass {
 }
 
 class BaseStructCase {
-    @JsonStruct(InnerClass)
+    @JsonStruct()
     inner: InnerClass;
 
-    @JsonStruct(InnerClass, 'customInner')
+    @JsonStruct('customInner')
     inner2: InnerClass;
 }
 

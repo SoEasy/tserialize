@@ -1,29 +1,57 @@
 import { JsonName, JsonStruct, JsonMeta, serialize, deserialize } from './../index';
 import 'reflect-metadata';
 
-class Nested {
-    @JsonName('operationSystem', value => value + '1', value => value + '2')
-    os: string;
+const data = {
+    products: {
+        Astral: {
+            read: true,
+            write: false
+        },
+        QES: {
+            pay: false,
+            withdraw: true
+        }
+    }
+};
+
+class Astral {
+    @JsonName()
+    read: boolean = false;
 
     @JsonName()
-    version: number;
+    write: boolean = false;
+}
 
-    toServer(): object {
-        return serialize(this);
-    }
+class QES {
+    @JsonName()
+    pay: boolean = false;
 
-    static fromServer(data: any): Nested {
-        return deserialize(data, Nested);
+    @JsonName()
+    withdraw: boolean = false;
+
+    static fromServer(data: any): QES {
+        return deserialize(data, QES);
     }
 }
 
-class Foo {
-    @JsonStruct(Nested, 'foo')
-    n: Nested = new Nested();
+class VED {
+    @JsonName()
+    dollar: boolean = false;
 }
 
-const f = new Foo();
-f.n = new Nested();
-f.n.os = 'win';
-f.n.version = 2;
-console.log(serialize(f));
+class Permissions {
+    @JsonStruct(Astral)
+    Astral: Astral = null;
+
+    @JsonStruct(QES)
+    QES: QES = new QES();
+
+    @JsonStruct(VED)
+    VED: VED = new VED();
+
+    static fromServer(data: object): Permissions {
+        return deserialize(data, Permissions);
+    }
+}
+
+console.log(Permissions.fromServer(data));
