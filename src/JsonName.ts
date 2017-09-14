@@ -46,10 +46,10 @@ export function JsonNameReadonly<T>(
 }
 
 export function JsonStruct(
-    proto: any,
     name?: string
 ): Decorator {
     return (target: object, propertyKey: string): void => {
+        const proto = (Reflect as any).getMetadata('design:type', target, propertyKey);
         if (!(Reflect as any).hasMetadata(JsonNameMetadataKey, target)) {
             (Reflect as any).defineMetadata(JsonNameMetadataKey, new MetaStore(), target);
         }
@@ -67,8 +67,8 @@ export function JsonStruct(
     };
 }
 
-export function JsonMeta(proto: any): Decorator {
-    return JsonStruct.call(null, proto, ParentKey);
+export function JsonMeta(): Decorator {
+    return JsonStruct.call(null, ParentKey);
 }
 
 export function JsonRaw(): Decorator {

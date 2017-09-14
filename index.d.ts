@@ -16,8 +16,8 @@ export function JsonName<T>(name?: string, serialize?: (obj: T, instance: any) =
     * @param deserialize - функция-десериализатор
     */
 export function JsonNameReadonly<T>(name?: string, deserialize?: (serverObj: any) => T): Decorator;
-export function JsonStruct(proto: any, name?: string): Decorator;
-export function JsonMeta(proto: any): Decorator;
+export function JsonStruct(name?: string): Decorator;
+export function JsonMeta(): Decorator;
 export function JsonRaw(): Decorator;
 
 /**

@@ -40,13 +40,13 @@ class VED {
 }
 
 class Permissions {
-    @JsonStruct(Astral)
+    @JsonStruct()
     Astral: Astral = null;
 
-    @JsonStruct(QES)
+    @JsonStruct()
     QES: QES = new QES();
 
-    @JsonStruct(VED)
+    @JsonStruct()
     VED: VED = new VED();
 
     static fromServer(data: object): Permissions {

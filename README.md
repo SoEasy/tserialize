@@ -249,11 +249,9 @@ JsonNameReadonly<T>(
 ##### Сигнатура
 ```
 function JsonStruct(
-    proto: any,
     name?: string
 )
 ```
-- proto - класс вложенного поля
 - name - название ключа для данных
 
 ##### Пример
@@ -267,7 +265,7 @@ class SysInfo {
 }
 
 class Computer {
-    @JsonStruct(SysInfo, 'sys_info')
+    @JsonStruct('sys_info')
     os: SysInfo;
 
     @JsonName()
@@ -289,11 +287,8 @@ const instance = Computer.fromServer(data);
 
 ##### Сигнатура
 ```
-function JsonMeta(
-    proto: any,
-)
+function JsonMeta()
 ```
-- proto - класс вложенного поля
 
 ##### Пример
 ```
@@ -306,7 +301,7 @@ class SysInfo {
 }
 
 class Computer {
-    @JsonMeta(SysInfo)
+    @JsonMeta()
     os: SysInfo;
 
     @JsonName()

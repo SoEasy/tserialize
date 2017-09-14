@@ -17,7 +17,7 @@ class InnerClass {
 }
 
 class BaseMetaCase {
-    @JsonMeta(InnerClass)
+    @JsonMeta()
     inner: InnerClass = new InnerClass();
 }
 

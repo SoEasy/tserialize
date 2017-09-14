@@ -191,8 +191,9 @@ function JsonNameReadonly(name, deserialize) {
     return JsonName.call(null, name, function () { return null; }, deserialize);
 }
 exports.JsonNameReadonly = JsonNameReadonly;
-function JsonStruct(proto, name) {
+function JsonStruct(name) {
     return function (target, propertyKey) {
+        var proto = Reflect.getMetadata('design:type', target, propertyKey);
         if (!Reflect.hasMetadata(metadata_key_1.JsonNameMetadataKey, target)) {
             Reflect.defineMetadata(metadata_key_1.JsonNameMetadataKey, new meta_store_1.MetaStore(), target);
         }
@@ -203,8 +204,8 @@ function JsonStruct(proto, name) {
     };
 }
 exports.JsonStruct = JsonStruct;
-function JsonMeta(proto) {
-    return JsonStruct.call(null, proto, metadata_key_1.ParentKey);
+function JsonMeta() {
+    return JsonStruct.call(null, metadata_key_1.ParentKey);
 }
 exports.JsonMeta = JsonMeta;
 function JsonRaw() {
