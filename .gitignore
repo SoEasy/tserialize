@@ -54,3 +54,4 @@ sample/bundle.js
 sample/bundle.js.map
 
 test/**/*.d.ts
+/.nyc_output/
