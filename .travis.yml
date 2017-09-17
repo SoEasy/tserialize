@@ -10,6 +10,6 @@ cache:
 deploy:
   provider: npm
   email: "vhaldemario@gmail.com"
-  api_key: $npm
+  api_key: $NPM_API_KEY
   on:
     branch: master
