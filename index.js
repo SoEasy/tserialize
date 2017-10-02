@@ -95,6 +95,37 @@ exports.ParentKey = '@JsonNameParentKey';
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
+var helpers_1 = __webpack_require__(6);
+/**
+ * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
+ *     поля, у которых есть декоратор и задано начальное значение.
+ * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
+ * @returns {{}} - обычный объект JS
+ */
+function serialize(model) {
+    var result = {};
+    var target = Object.getPrototypeOf(model);
+    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+    var modelKeys = metaStore.getPropertyKeys();
+    for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
+        var propertyKey = modelKeys_1[_i];
+        var metadata = metaStore.getPropertyMeta(propertyKey);
+        var serializedValue = helpers_1.serializeValue(metadata, model[propertyKey], model);
+        helpers_1.assignSerializedValueToResult(metadata, serializedValue, result);
+    }
+    return result;
+}
+exports.serialize = serialize;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var metadata_key_1 = __webpack_require__(0);
 /**
  * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
  * @param data - данные от сервера
@@ -123,37 +154,6 @@ exports.deserialize = deserialize;
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var metadata_key_1 = __webpack_require__(0);
-var helpers_1 = __webpack_require__(6);
-/**
- * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
- *     поля, у которых есть декоратор и задано начальное значение.
- * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
- * @returns {{}} - обычный объект JS
- */
-function serialize(model) {
-    var result = {};
-    var target = Object.getPrototypeOf(model);
-    var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
-    var modelKeys = metaStore.getPropertyKeys();
-    for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
-        var propertyKey = modelKeys_1[_i];
-        var metadata = metaStore.getPropertyMeta(propertyKey);
-        var serializedValue = helpers_1.serializeValue(metadata, model[propertyKey], model);
-        helpers_1.assignSerializedValueToResult(metadata, serializedValue, result);
-    }
-    return result;
-}
-exports.serialize = serialize;
-
-
-/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -162,7 +162,8 @@ exports.serialize = serialize;
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
 var meta_store_1 = __webpack_require__(5);
-var deserialize_1 = __webpack_require__(1);
+var deserialize_1 = __webpack_require__(2);
+var serialize_1 = __webpack_require__(7);
 /**
  * @description Декоратор для полей модели, указывающий как называется поле в JSONRPC-ответе/запросе и как его
  *     сериализовать/десериализовать. Поле в классе обязательно должно иметь начальное значение, хоть null.
@@ -212,6 +213,34 @@ function JsonRaw() {
     throw new Error('Not implemented');
 }
 exports.JsonRaw = JsonRaw;
+function JsonArray(proto, name) {
+    return function (target, propertyKey) {
+        // const proto = (Reflect as any).getMetadata('design:type', target, propertyKey);
+        if (!Reflect.hasMetadata(metadata_key_1.JsonNameMetadataKey, target)) {
+            Reflect.defineMetadata(metadata_key_1.JsonNameMetadataKey, new meta_store_1.MetaStore(), target);
+        }
+        var metaStore = Reflect.getMetadata(metadata_key_1.JsonNameMetadataKey, target);
+        var targetKey = name ? name : propertyKey;
+        var serializer = function (value) {
+            if (!value || !(value instanceof Array)) {
+                return null;
+            }
+            return value.map(function (item) {
+                if (item instanceof proto) {
+                    return item.toServer ? item.toServer() : serialize_1.serialize(item);
+                }
+            }).filter(function (i) { return !!i; });
+        };
+        var deserializer = function (value) {
+            if (!value || !(value instanceof Array)) {
+                return null;
+            }
+            return value.map(function (item) { return proto.fromServer ? proto.fromServer(item) : deserialize_1.deserialize(item, proto); });
+        };
+        metaStore.addProperty(propertyKey, targetKey, false, serializer, deserializer);
+    };
+}
+exports.JsonArray = JsonArray;
 
 
 /***/ }),
@@ -222,13 +251,14 @@ exports.JsonRaw = JsonRaw;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(3);
+exports.JsonArray = JsonName_1.JsonArray;
 exports.JsonName = JsonName_1.JsonName;
 exports.JsonNameReadonly = JsonName_1.JsonNameReadonly;
 exports.JsonStruct = JsonName_1.JsonStruct;
 exports.JsonMeta = JsonName_1.JsonMeta;
-var serialize_1 = __webpack_require__(2);
+var serialize_1 = __webpack_require__(1);
 exports.serialize = serialize_1.serialize;
-var deserialize_1 = __webpack_require__(1);
+var deserialize_1 = __webpack_require__(2);
 exports.deserialize = deserialize_1.deserialize;
 
 
@@ -289,7 +319,7 @@ exports.MetaStore = MetaStore;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var metadata_key_1 = __webpack_require__(0);
-var serialize_1 = __webpack_require__(2);
+var serialize_1 = __webpack_require__(1);
 function serializeValue(metadata, value, instance) {
     if (!metadata) {
         return;
@@ -316,6 +346,17 @@ function assignSerializedValueToResult(metadata, serializedValue, result) {
     }
 }
 exports.assignSerializedValueToResult = assignSerializedValueToResult;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var serialize_1 = __webpack_require__(1);
+exports.serialize = serialize_1.serialize;
 
 
 /***/ })

@@ -1,6 +1,7 @@
 import { JsonNameMetadataKey, ParentKey } from './metadata-key';
 import { MetaStore } from 'meta-store';
-import { deserialize } from 'deserialize';
+import { deserialize } from './deserialize';
+import { serialize } from './serialize';
 
 export type Decorator = (target: object, propertyKey: string) => void;
 
@@ -73,4 +74,45 @@ export function JsonMeta(): Decorator {
 
 export function JsonRaw(): Decorator {
     throw new Error('Not implemented');
+}
+
+export function JsonArray(proto: any, name?: string): Decorator {
+    return (target: object, propertyKey: string): void => {
+        // const proto = (Reflect as any).getMetadata('design:type', target, propertyKey);
+        if (!(Reflect as any).hasMetadata(JsonNameMetadataKey, target)) {
+            (Reflect as any).defineMetadata(JsonNameMetadataKey, new MetaStore(), target);
+        }
+        const metaStore: MetaStore = (Reflect as any).getMetadata(JsonNameMetadataKey, target);
+        const targetKey = name ? name : propertyKey;
+
+        const serializer = (value): any => {
+            if (!value || !(value instanceof Array)) {
+                return null;
+            }
+            return value.map(
+                item => {
+                    if (item instanceof proto) {
+                        return item.toServer ? item.toServer() : serialize(item);
+                    }
+                }
+            ).filter(i => !!i);
+        };
+
+        const deserializer = (value): any => {
+            if (!value || !(value instanceof Array)) {
+                return null;
+            }
+            return value.map(
+                item => proto.fromServer ? proto.fromServer(item) : deserialize(item, proto)
+            );
+        };
+
+        metaStore.addProperty(
+            propertyKey,
+            targetKey,
+            false,
+            serializer,
+            deserializer
+        );
+    };
 }

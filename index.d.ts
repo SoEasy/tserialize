@@ -19,6 +19,7 @@ export function JsonNameReadonly<T>(name?: string, deserialize?: (serverObj: any
 export function JsonStruct(name?: string): Decorator;
 export function JsonMeta(): Decorator;
 export function JsonRaw(): Decorator;
+export function JsonArray(proto: any, name?: string): Decorator;
 
 /**
   * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
