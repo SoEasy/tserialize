@@ -2,31 +2,14 @@
 [![Build Status](https://travis-ci.org/SoEasy/tserialize.svg?branch=master)](https://travis-ci.org/SoEasy/tserialize)
 
 ## Установка
-Пакет лежит в нашем приватом резпозитории, добавьте его
->npm set registry http://npmjs.bank24.int
-
-Установка
 >npm install --save tserialize
 
 Установка с гитхаба
 >npm install https://github.com/SoEasy/tserialize/tarball/master
 
 ### Change overview
-Версия поднялась до 1.1.0
-Основные моменты:
-- начальное значение для поля под декоратором больше не обязательно
-- Небольшое нарушение обратной совместимости - удалены из экспорта ключ родителя `ParentKey` и сериализатор `noChangeSerializer`. Потому что не нужны теперь.
-- Добавлены новые декораторы: `JsonStruct`(для вложенных моделей) и `JsonMeta`(для плоско-композитных моделей).
-С помощью JsonStruct больше не надо писать так:
-```
-@JsonName('address', value => value.toServer, Address.fromServer)
-address: Address = new Address();
-```
-Теперь
-```
-@JsonStruct(Address)
-address: Address;
-```
+Версия поднялась до 1.2.2
+- Добавлен валидатор JsonArray
 
 ## Основная информация
 Библиотека для борьбы с бэкэндом и любыми другими источниками данных, которые не желают(или не могут) называть поля в объектах так, как нам удобно.
@@ -108,6 +91,7 @@ console.log(progressionInstance.fieldTwo); // 2
  - [Декоратор для чтения JsonNameReadonly](#jsonnamereadonly)
  - [Декоратор для вложенных классов JsonStruct](#jsonstruct)
  - [Декоратор для метаданных JsonMeta](#jsonmeta)
+ - [Декоратор для массивов JsonArray](#jsonarray)
 
 ### deserialize
 Функция из пакета `tserialize`, нужна для превращения сырых данных в экземпляр класса
@@ -315,6 +299,39 @@ class Computer {
 const data = { ram: 8, operation_system: 'Win', os_version: 10 }; // flat data
 const instance = Computer.fromServer(data);
 // { ram: 8, os: { name: 'Win', version: 10 } } // composite model
+```
+
+### JsonArray
+Декоратор для сериализации/десериализации массивов сериализуемых экземпляров.
+Использует внутренние реализации toServer/static fromServer если они есть, а если нет - нативные serialize/deserialize
+
+##### Сигнатура
+```
+function JsonArray(Prototype, name)
+```
+Prototype - класс, экземпляры которого будут храниться в массиве
+
+##### Пример
+```
+class Person {
+    @JsonName('name') personName: string;
+    @JsonName() phone: string;
+
+    constructor(personName, phone) {
+        Object.assign(this, { personName, phone });
+    }
+}
+
+class PhoneBook {
+    @JsonArray(Person, 'records')
+    persons: Array<Person> = [];
+}
+
+const book = new PhoneBook();
+book.persons.push(new Person('Mike', '1'));
+book.persons.push(new Person('Jane', '2'));
+const data = serialize(book);
+// { records: [ {name: 'Mike', phone: 1 }, { name: 'Jane', phone: 2 } ] }
 ```
 
 ## TODO
