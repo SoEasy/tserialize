@@ -20,6 +20,6 @@
     "baseUrl": "./src"
   },
   "files": [
-    "src/index.ts"
+    "src/decorators/index.ts"
   ]
 }

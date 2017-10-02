@@ -1,6 +1,6 @@
 {
   "name": "tserialize",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "TypeScript serialize utils",
   "types": "index.d.ts",
   "typescript": {
@@ -45,6 +45,7 @@
     "webpack": "2.6.1"
   },
   "dependencies": {
+    "kaop-ts": "^1.5.0",
     "reflect-metadata": "0.1.10"
   }
 }
