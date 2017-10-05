@@ -1,5 +1,5 @@
-export { JsonArray } from './JsonArray/JsonArray';
-export { JsonMeta } from './JsonMeta/JsonMeta';
-export { JsonName } from './JsonName/JsonName';
-export { JsonNameReadonly } from './JsonNameReadonly/JsonNameReadonly';
-export { JsonStruct } from './JsonStruct/JsonStruct';
+export { JsonArray } from './JsonArray';
+export { JsonMeta } from './JsonMeta';
+export { JsonName } from './JsonName';
+export { JsonNameReadonly } from './JsonNameReadonly';
+export { JsonStruct } from './JsonStruct';

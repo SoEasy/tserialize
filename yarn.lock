@@ -6,6 +6,10 @@
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.0.4.tgz#fe86315d9a66827feeb16f73bc954688ec950e18"
 
+"@types/core-js@^0.9.42":
+  version "0.9.43"
+  resolved "http://npmjs.bank24.int/@types%2fcore-js/-/core-js-0.9.43.tgz#65d646c5e8c0cd1bdee37065799f9d3d48748253"
+
 "@types/mocha@^2.2.41":
   version "2.2.42"
   resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-2.2.42.tgz#ab769f51d37646b6fe8d4a086a98c285b1fab3f5"
@@ -541,9 +545,9 @@ convert-source-map@^1.3.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-1.5.0.tgz#9acd70851c6d5dfdd93d9282e5edf94a03ff46b5"
 
-core-js@^2.4.0:
+core-js@^2.4.0, core-js@^2.5.0:
   version "2.5.1"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.5.1.tgz#ae6874dc66937789b80754ff5428df66819ca50b"
+  resolved "http://npmjs.bank24.int/core-js/-/core-js-2.5.1.tgz#ae6874dc66937789b80754ff5428df66819ca50b"
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -1345,6 +1349,13 @@ jsprim@^1.2.2:
     extsprintf "1.3.0"
     json-schema "0.2.3"
     verror "1.10.0"
+
+kaop-ts@^1.5.0:
+  version "1.5.0"
+  resolved "http://npmjs.bank24.int/kaop-ts/-/kaop-ts-1.5.0.tgz#e7c2b3c003ac8b7e5f199edc62b101f4e8223741"
+  dependencies:
+    "@types/core-js" "^0.9.42"
+    core-js "^2.5.0"
 
 kind-of@^3.0.2:
   version "3.2.2"

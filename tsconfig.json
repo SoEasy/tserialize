@@ -17,9 +17,17 @@
       "dom",
       "es7"
     ],
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "utils": [
+        "./utils"
+      ]
+    }
   },
-  "files": [
-    "src/decorators/index.ts"
+  "exclude": [
+    "node_modules",
+    "sample/**/*",
+    "test/**/*"
   ]
+
 }
