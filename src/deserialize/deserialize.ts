@@ -10,15 +10,33 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T })
     const retVal = new cls();
     const target = Object.getPrototypeOf(retVal);
     const metaStore: MetaStore = (Reflect as any).getMetadata(JsonNameMetadataKey, target);
+    const lateFields: Array<string> = [];
 
     for (const propertyKey of metaStore.getPropertyKeys()) {
+        const serializeProps = metaStore.getPropertyMeta(propertyKey);
+        if (serializeProps.isLate) {
+            lateFields.push(propertyKey);
+            continue;
+        }
+        if (serializeProps) {
+            const deserialize = serializeProps.deserialize;
+            const jsonName = serializeProps.rawKey;
+            const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
+            if (typeof jsonValue !== 'undefined') {
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, data) : jsonValue;
+            }
+        }
+    }
+
+    // TODO remove duplicate
+    for (const propertyKey of lateFields) {
         const serializeProps = metaStore.getPropertyMeta(propertyKey);
         if (serializeProps) {
             const deserialize = serializeProps.deserialize;
             const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, retVal) : jsonValue;
             }
         }
     }

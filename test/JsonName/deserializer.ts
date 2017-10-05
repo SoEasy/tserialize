@@ -9,9 +9,14 @@ class BaseDeserializerCase {
     ignoredField: number;
 }
 
+class DeserializeWithRawData {
+    @JsonName('field', value => value, (rawValue, rawData) => `${rawValue}${rawData.related}${rawValue}`)
+    field: string;
+}
+
 describe('Custom deserializer case', () => {
     const referenceValue = 'hello';
-    const data = {fieldToSerialize: referenceValue};
+    const data = { fieldToSerialize: referenceValue};
     const instance = deserialize(data, BaseDeserializerCase);
 
     it('have property', () => {
@@ -24,5 +29,15 @@ describe('Custom deserializer case', () => {
 
     it('be equal to reference', () => {
         expect(instance).to.deep.equal({fieldToSerialize: `${referenceValue}!`});
+    });
+});
+
+describe('Deserializer must receive raw data', () => {
+    const referenceValue = 'hello';
+    const data = { field: referenceValue, related: '!' };
+    const instance = deserialize(data, DeserializeWithRawData);
+
+    it('must receive raw data', () => {
+        expect(instance).to.be.eql({field: `${referenceValue}!${referenceValue}`});
     });
 });
