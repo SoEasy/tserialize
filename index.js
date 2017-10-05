@@ -83,7 +83,7 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var store_1 = __webpack_require__(14);
+var store_1 = __webpack_require__(13);
 exports.MetaStore = store_1.MetaStore;
 var consts_1 = __webpack_require__(5);
 exports.JsonNameMetadataKey = consts_1.JsonNameMetadataKey;
@@ -109,7 +109,48 @@ exports.deserialize = deserialize_1.deserialize;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var utils_1 = __webpack_require__(0);
-var helpers_1 = __webpack_require__(12);
+function JsonName(name, serialize, deserialize) {
+    return function (target, propertyKey) {
+        var metaStore = utils_1.MetaStore.getMetaStore(target);
+        var rawKey = name ? name : propertyKey;
+        metaStore.make(propertyKey).name(rawKey).serializator(serialize).deserializator(deserialize);
+    };
+}
+exports.JsonName = JsonName;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var utils_1 = __webpack_require__(0);
+function serializeValue(metadata, value, instance) {
+    if (!metadata) {
+        return;
+    }
+    if (metadata.isStruct) {
+        var serializer = value ? value.toServer : null;
+        return serializer ? serializer.call(value) : (value ? serialize(value) : null);
+    }
+    else {
+        var serializer = metadata.serialize;
+        return serializer ? serializer(value, instance) : value;
+    }
+}
+function assignSerializedValueToResult(metadata, serializedValue, result) {
+    if (![null, undefined].includes(serializedValue)) {
+        var jsonName = metadata.rawKey;
+        if (jsonName !== utils_1.ParentKey) {
+            result[jsonName] = serializedValue;
+        }
+        else {
+            Object.assign(result, serializedValue);
+        }
+    }
+}
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
  *     поля, у которых есть декоратор и задано начальное значение.
@@ -124,30 +165,12 @@ function serialize(model) {
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
         var propertyKey = modelKeys_1[_i];
         var metadata = metaStore.getPropertyMeta(propertyKey);
-        var serializedValue = helpers_1.serializeValue(metadata, model[propertyKey], model);
-        helpers_1.assignSerializedValueToResult(metadata, serializedValue, result);
+        var serializedValue = serializeValue(metadata, model[propertyKey], model);
+        assignSerializedValueToResult(metadata, serializedValue, result);
     }
     return result;
 }
 exports.serialize = serialize;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
-function JsonName(name, serialize, deserialize) {
-    return function (target, propertyKey) {
-        var metaStore = utils_1.MetaStore.getMetaStore(target);
-        var rawKey = name ? name : propertyKey;
-        metaStore.make(propertyKey).name(rawKey).serializator(serialize).deserializator(deserialize);
-    };
-}
-exports.JsonName = JsonName;
 
 
 /***/ }),
@@ -193,7 +216,7 @@ var JsonArray_1 = __webpack_require__(7);
 exports.JsonArray = JsonArray_1.JsonArray;
 var JsonMeta_1 = __webpack_require__(8);
 exports.JsonMeta = JsonMeta_1.JsonMeta;
-var JsonName_1 = __webpack_require__(3);
+var JsonName_1 = __webpack_require__(2);
 exports.JsonName = JsonName_1.JsonName;
 var JsonNameReadonly_1 = __webpack_require__(9);
 exports.JsonNameReadonly = JsonNameReadonly_1.JsonNameReadonly;
@@ -208,8 +231,8 @@ exports.JsonStruct = JsonStruct_1.JsonStruct;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonName_1 = __webpack_require__(3);
-var serialize_1 = __webpack_require__(13);
+var JsonName_1 = __webpack_require__(2);
+var serialize_1 = __webpack_require__(12);
 var deserialize_1 = __webpack_require__(1);
 function JsonArray(proto, name) {
     var serializer = function (value) {
@@ -255,7 +278,7 @@ exports.JsonMeta = JsonMeta;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonName_1 = __webpack_require__(3);
+var JsonName_1 = __webpack_require__(2);
 function JsonNameReadonly(name, deserialize) {
     return JsonName_1.JsonName.call(null, name, function () { return null; }, deserialize);
 }
@@ -288,7 +311,7 @@ function deserialize(data, cls) {
             var jsonName = serializeProps.rawKey;
             var jsonValue = jsonName !== utils_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue, data) : jsonValue;
             }
         }
     }
@@ -310,7 +333,7 @@ exports.JsonName = decorators_1.JsonName;
 exports.JsonNameReadonly = decorators_1.JsonNameReadonly;
 exports.JsonStruct = decorators_1.JsonStruct;
 exports.JsonMeta = decorators_1.JsonMeta;
-var serialize_1 = __webpack_require__(2);
+var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(1);
 exports.deserialize = deserialize_1.deserialize;
@@ -323,49 +346,12 @@ exports.deserialize = deserialize_1.deserialize;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
-var serialize_1 = __webpack_require__(2);
-function serializeValue(metadata, value, instance) {
-    if (!metadata) {
-        return;
-    }
-    if (metadata.isStruct) {
-        var serializer = value ? value.toServer : null;
-        return serializer ? serializer.call(value) : (value ? serialize_1.serialize(value) : null);
-    }
-    else {
-        var serializer = metadata.serialize;
-        return serializer ? serializer(value, instance) : value;
-    }
-}
-exports.serializeValue = serializeValue;
-function assignSerializedValueToResult(metadata, serializedValue, result) {
-    if (![null, undefined].includes(serializedValue)) {
-        var jsonName = metadata.rawKey;
-        if (jsonName !== utils_1.ParentKey) {
-            result[jsonName] = serializedValue;
-        }
-        else {
-            Object.assign(result, serializedValue);
-        }
-    }
-}
-exports.assignSerializedValueToResult = assignSerializedValueToResult;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var serialize_1 = __webpack_require__(2);
+var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

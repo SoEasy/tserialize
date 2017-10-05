@@ -18,7 +18,7 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T })
             const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, data) : jsonValue;
             }
         }
     }
