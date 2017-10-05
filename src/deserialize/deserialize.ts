@@ -1,5 +1,4 @@
-import { JsonNameMetadataKey, ParentKey } from './metadata-key';
-import { MetaStore } from './meta-store';
+import { JsonNameMetadataKey, ParentKey, MetaStore } from 'utils';
 
 /**
  * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
@@ -16,7 +15,7 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T })
         const serializeProps = metaStore.getPropertyMeta(propertyKey);
         if (serializeProps) {
             const deserialize = serializeProps.deserialize;
-            const jsonName = serializeProps.targetKey;
+            const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
                 retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue) : jsonValue;
