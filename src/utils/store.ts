@@ -59,6 +59,9 @@ export class MetaStore {
     }
 
     name(rawKey: string): MetaStore {
+        if (!rawKey) {
+            return this;
+        }
         this.currentMetadata.rawKey = rawKey;
         delete this.keyPropertyInversion[this.currentPropertyKey];
         this.keyPropertyInversion[rawKey] = this.currentPropertyKey;

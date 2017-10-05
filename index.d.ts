@@ -24,6 +24,8 @@ export function JsonNameReadonly<T>(name?: string, deserialize?: (rawValue: any,
 
 export function JsonStruct(name?: string): Decorator;
 
+export function JsonNameLate<T>(name?: string, serialize?: (value: T, instance: any) => any, deserialize?: (rawValue: any, rawData?: T) => T): Decorator;
+
 /**
   * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
   * @param data - данные от сервера

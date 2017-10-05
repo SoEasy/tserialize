@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -83,7 +83,7 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var store_1 = __webpack_require__(13);
+var store_1 = __webpack_require__(14);
 exports.MetaStore = store_1.MetaStore;
 var consts_1 = __webpack_require__(5);
 exports.JsonNameMetadataKey = consts_1.JsonNameMetadataKey;
@@ -97,7 +97,7 @@ exports.ParentKey = consts_1.ParentKey;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var deserialize_1 = __webpack_require__(10);
+var deserialize_1 = __webpack_require__(11);
 exports.deserialize = deserialize_1.deserialize;
 
 
@@ -218,10 +218,12 @@ var JsonMeta_1 = __webpack_require__(8);
 exports.JsonMeta = JsonMeta_1.JsonMeta;
 var JsonName_1 = __webpack_require__(2);
 exports.JsonName = JsonName_1.JsonName;
-var JsonNameReadonly_1 = __webpack_require__(9);
+var JsonNameReadonly_1 = __webpack_require__(10);
 exports.JsonNameReadonly = JsonNameReadonly_1.JsonNameReadonly;
 var JsonStruct_1 = __webpack_require__(4);
 exports.JsonStruct = JsonStruct_1.JsonStruct;
+var JsonNameLate_1 = __webpack_require__(9);
+exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
 
 
 /***/ }),
@@ -232,7 +234,7 @@ exports.JsonStruct = JsonStruct_1.JsonStruct;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(2);
-var serialize_1 = __webpack_require__(12);
+var serialize_1 = __webpack_require__(13);
 var deserialize_1 = __webpack_require__(1);
 function JsonArray(proto, name) {
     var serializer = function (value) {
@@ -278,6 +280,24 @@ exports.JsonMeta = JsonMeta;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var utils_1 = __webpack_require__(0);
+function JsonNameLate(name, serialize, deserialize) {
+    return function (target, propertyKey) {
+        var metaStore = utils_1.MetaStore.getMetaStore(target);
+        var rawKey = name ? name : propertyKey;
+        metaStore.make(propertyKey).name(rawKey).serializator(serialize).deserializator(deserialize).late();
+    };
+}
+exports.JsonNameLate = JsonNameLate;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(2);
 function JsonNameReadonly(name, deserialize) {
     return JsonName_1.JsonName.call(null, name, function () { return null; }, deserialize);
@@ -286,7 +306,7 @@ exports.JsonNameReadonly = JsonNameReadonly;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -303,9 +323,14 @@ function deserialize(data, cls) {
     var retVal = new cls();
     var target = Object.getPrototypeOf(retVal);
     var metaStore = Reflect.getMetadata(utils_1.JsonNameMetadataKey, target);
+    var lateFields = [];
     for (var _i = 0, _a = metaStore.getPropertyKeys(); _i < _a.length; _i++) {
         var propertyKey = _a[_i];
         var serializeProps = metaStore.getPropertyMeta(propertyKey);
+        if (serializeProps.isLate) {
+            lateFields.push(propertyKey);
+            continue;
+        }
         if (serializeProps) {
             var deserialize_1 = serializeProps.deserialize;
             var jsonName = serializeProps.rawKey;
@@ -315,13 +340,25 @@ function deserialize(data, cls) {
             }
         }
     }
+    for (var _b = 0, lateFields_1 = lateFields; _b < lateFields_1.length; _b++) {
+        var propertyKey = lateFields_1[_b];
+        var serializeProps = metaStore.getPropertyMeta(propertyKey);
+        if (serializeProps) {
+            var deserialize_2 = serializeProps.deserialize;
+            var jsonName = serializeProps.rawKey;
+            var jsonValue = jsonName !== utils_1.ParentKey ? data[jsonName] : data;
+            if (typeof jsonValue !== 'undefined') {
+                retVal[serializeProps.propertyKey] = deserialize_2 ? deserialize_2(jsonValue, retVal) : jsonValue;
+            }
+        }
+    }
     return retVal;
 }
 exports.deserialize = deserialize;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -330,6 +367,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var decorators_1 = __webpack_require__(6);
 exports.JsonArray = decorators_1.JsonArray;
 exports.JsonName = decorators_1.JsonName;
+exports.JsonNameLate = decorators_1.JsonNameLate;
 exports.JsonNameReadonly = decorators_1.JsonNameReadonly;
 exports.JsonStruct = decorators_1.JsonStruct;
 exports.JsonMeta = decorators_1.JsonMeta;
@@ -340,7 +378,7 @@ exports.deserialize = deserialize_1.deserialize;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -351,7 +389,7 @@ exports.serialize = serialize_1.serialize;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -406,6 +444,9 @@ var MetaStore = (function () {
         return this;
     };
     MetaStore.prototype.name = function (rawKey) {
+        if (!rawKey) {
+            return this;
+        }
         this.currentMetadata.rawKey = rawKey;
         delete this.keyPropertyInversion[this.currentPropertyKey];
         this.keyPropertyInversion[rawKey] = this.currentPropertyKey;
