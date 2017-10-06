@@ -340,6 +340,7 @@ function deserialize(data, cls) {
             }
         }
     }
+    // TODO remove duplicate
     for (var _b = 0, lateFields_1 = lateFields; _b < lateFields_1.length; _b++) {
         var propertyKey = lateFields_1[_b];
         var serializeProps = metaStore.getPropertyMeta(propertyKey);

@@ -3,7 +3,7 @@ import { Decorator, MetaStore } from 'utils';
 export function JsonNameLate<T>(
     name?: string,
     serialize?: (value: T, instance: any) => any,
-    deserialize?: (rawValue: any, rawData?: T) => T
+    deserialize?: (rawValue: any, rawData?: any) => T
 ): Decorator {
     return (target: object, propertyKey: string): void => {
         const metaStore: MetaStore = MetaStore.getMetaStore(target);
