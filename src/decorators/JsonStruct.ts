@@ -1,7 +1,7 @@
-import { Decorator, MetaStore } from 'utils';
+import { MetaStore } from 'utils';
 import { deserialize } from 'deserialize';
 
-export function JsonStruct(name?: string): Decorator {
+export function JsonStruct(name?: string): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {
         const proto = (Reflect as any).getMetadata('design:type', target, propertyKey);
         const metaStore: MetaStore = MetaStore.getMetaStore(target);
