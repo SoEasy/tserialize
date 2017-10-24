@@ -1,9 +1,8 @@
-import { Decorator } from 'utils';
 import { JsonName } from './JsonName';
 import { serialize } from './../serialize';
 import { deserialize } from './../deserialize';
 
-export function JsonArray(proto: any, name?: string): Decorator {
+export function JsonArray(proto: any, name?: string): (target: object, propertyKey: string) => void {
     const serializer = (value): any => {
         if (!value || !(value instanceof Array)) {
             return null;
