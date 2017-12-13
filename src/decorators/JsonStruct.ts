@@ -9,6 +9,6 @@ export function JsonStruct(name?: string): (target: object, propertyKey: string)
         const rawKey = name ? name : propertyKey;
         const deserializer = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
 
-        metaStore.make(propertyKey).name(rawKey).deserializator(deserializer).struct();
+        metaStore.make(propertyKey, target).name(rawKey).deserializator(deserializer).struct();
     };
 }

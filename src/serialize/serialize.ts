@@ -1,4 +1,4 @@
-import { MetaStore, PropertyMetadata, ParentKey } from 'utils';
+import { MetaStore, PropertyMetadata, ParentKey } from './../utils';
 
 function serializeValue(metadata: PropertyMetadata, value: any, instance: any): any {
     if (!metadata) {
@@ -39,6 +39,9 @@ export function serialize(model: { [key: string]: any }): object {
 
     const modelKeys = metaStore.getPropertyKeys();
     for (const propertyKey of modelKeys) {
+        if (!metaStore.hasOwnProperty(target, propertyKey)) {
+            continue;
+        }
         const metadata = metaStore.getPropertyMeta(propertyKey);
         const serializedValue = serializeValue(metadata, model[propertyKey], model);
         assignSerializedValueToResult(metadata, serializedValue, result);

@@ -8,6 +8,6 @@ export function JsonNameLate<T>(
     return (target: object, propertyKey: string): void => {
         const metaStore: MetaStore = MetaStore.getMetaStore(target);
         const rawKey = name ? name : propertyKey;
-        metaStore.make(propertyKey).name(rawKey).serializator(serialize).deserializator(deserialize).late();
+        metaStore.make(propertyKey, target).name(rawKey).serializator(serialize).deserializator(deserialize).late();
     };
 }
