@@ -400,7 +400,7 @@ exports.serialize = serialize_1.serialize;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var consts_1 = __webpack_require__(5);
-var MetaStore = (function () {
+var MetaStore = /** @class */ (function () {
     function MetaStore() {
         /**
          * @description Для имени поля в классе хранит его мета-информацию

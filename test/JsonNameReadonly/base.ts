@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { JsonNameReadonly, deserialize, serialize } from '../../';
+import { JsonNameReadonly, deserialize, serialize } from './../../src';
 import 'reflect-metadata';
 
 class BaseReadonlyCase {

@@ -1,6 +1,5 @@
 import { expect } from 'chai';
-import { JsonName } from './../../src/decorators/JsonName';
-import { serialize } from './../../src/serialize';
+import { JsonName, serialize } from './../../src';
 import 'reflect-metadata';
 
 class Base {
@@ -28,7 +27,7 @@ class ChildTwo extends Base {
     childTwoField: boolean = true;
 }
 
-describe('Custom serializer case', () => {
+describe('Serialize extended class', () => {
     const c1 = new ChildOne();
     const c2 = new ChildTwo();
     const serialized1 = serialize(c1);

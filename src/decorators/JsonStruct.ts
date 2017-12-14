@@ -1,5 +1,5 @@
-import { MetaStore } from 'utils';
-import { deserialize } from 'deserialize';
+import { MetaStore } from './../utils';
+import { deserialize } from './../deserialize';
 
 export function JsonStruct(name?: string): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {

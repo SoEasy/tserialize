@@ -1,4 +1,4 @@
-import { MetaStore } from 'utils';
+import { MetaStore } from './../utils';
 
 export function JsonNameLate<T>(
     name?: string,
