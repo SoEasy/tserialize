@@ -113,7 +113,7 @@ function JsonName(name, serialize, deserialize) {
     return function (target, propertyKey) {
         var metaStore = utils_1.MetaStore.getMetaStore(target);
         var rawKey = name ? name : propertyKey;
-        metaStore.make(propertyKey).name(rawKey).serializator(serialize).deserializator(deserialize);
+        metaStore.make(propertyKey, target).name(rawKey).serializator(serialize).deserializator(deserialize);
     };
 }
 exports.JsonName = JsonName;
@@ -164,6 +164,9 @@ function serialize(model) {
     var modelKeys = metaStore.getPropertyKeys();
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
         var propertyKey = modelKeys_1[_i];
+        if (!metaStore.hasOwnProperty(target, propertyKey)) {
+            continue;
+        }
         var metadata = metaStore.getPropertyMeta(propertyKey);
         var serializedValue = serializeValue(metadata, model[propertyKey], model);
         assignSerializedValueToResult(metadata, serializedValue, result);
@@ -188,7 +191,7 @@ function JsonStruct(name) {
         var metaStore = utils_1.MetaStore.getMetaStore(target);
         var rawKey = name ? name : propertyKey;
         var deserializer = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
-        metaStore.make(propertyKey).name(rawKey).deserializator(deserializer).struct();
+        metaStore.make(propertyKey, target).name(rawKey).deserializator(deserializer).struct();
     };
 }
 exports.JsonStruct = JsonStruct;
@@ -285,7 +288,7 @@ function JsonNameLate(name, serialize, deserialize) {
     return function (target, propertyKey) {
         var metaStore = utils_1.MetaStore.getMetaStore(target);
         var rawKey = name ? name : propertyKey;
-        metaStore.make(propertyKey).name(rawKey).serializator(serialize).deserializator(deserialize).late();
+        metaStore.make(propertyKey, target).name(rawKey).serializator(serialize).deserializator(deserialize).late();
     };
 }
 exports.JsonNameLate = JsonNameLate;
@@ -397,7 +400,7 @@ exports.serialize = serialize_1.serialize;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var consts_1 = __webpack_require__(5);
-var MetaStore = (function () {
+var MetaStore = /** @class */ (function () {
     function MetaStore() {
         /**
          * @description Для имени поля в классе хранит его мета-информацию
@@ -415,6 +418,7 @@ var MetaStore = (function () {
          * @description Поле для хранения промежуточного значения ключа, с которым работает builder
          */
         this.currentPropertyKey = null;
+        this.significantFieldsForTarget = {};
     }
     Object.defineProperty(MetaStore.prototype, "currentMetadata", {
         get: function () {
@@ -429,11 +433,16 @@ var MetaStore = (function () {
         }
         return Reflect.getMetadata(consts_1.JsonNameMetadataKey, target);
     };
-    MetaStore.prototype.make = function (propertyKey) {
+    MetaStore.prototype.make = function (propertyKey, target) {
         this.currentPropertyKey = propertyKey;
         if (this.currentMetadata) {
             console.warn("Property \"" + propertyKey + "\" already have metadata for serialization");
         }
+        var targetConstructorName = target.constructor.name;
+        if (!this.significantFieldsForTarget[targetConstructorName]) {
+            this.significantFieldsForTarget[targetConstructorName] = [];
+        }
+        this.significantFieldsForTarget[targetConstructorName].push(propertyKey);
         this.propertiesMetaStore[propertyKey] = this.currentMetadata || {
             propertyKey: propertyKey,
             rawKey: propertyKey,
@@ -487,6 +496,15 @@ var MetaStore = (function () {
     MetaStore.prototype.getTargetKeyMeta = function (targetKey) {
         var propertyKey = this.keyPropertyInversion[targetKey];
         return propertyKey ? this.propertiesMetaStore[propertyKey] : null;
+    };
+    MetaStore.prototype.hasOwnProperty = function (target, propertyKey) {
+        if ((this.significantFieldsForTarget[target.constructor.name] || []).includes(propertyKey)) {
+            return true;
+        }
+        while (target.__proto__) {
+            return this.hasOwnProperty(target.__proto__, propertyKey);
+        }
+        return false;
     };
     return MetaStore;
 }());

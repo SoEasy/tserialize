@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { JsonName, JsonStruct, deserialize } from '../../';
+import { JsonName, JsonStruct, deserialize } from './../../src';
 import 'reflect-metadata';
 
 class InnerClass {

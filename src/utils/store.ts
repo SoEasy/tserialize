@@ -30,6 +30,8 @@ export class MetaStore {
      */
     private currentPropertyKey: string = null;
 
+    private significantFieldsForTarget: Record<string, Array<string>> = {};
+
     private get currentMetadata(): PropertyMetadata {
         return this.propertiesMetaStore[this.currentPropertyKey];
     }
@@ -41,11 +43,17 @@ export class MetaStore {
         return (Reflect as any).getMetadata(JsonNameMetadataKey, target);
     }
 
-    make(propertyKey: string): MetaStore {
+    make(propertyKey: string, target: any): MetaStore {
         this.currentPropertyKey = propertyKey;
         if (this.currentMetadata) {
             console.warn(`Property "${propertyKey}" already have metadata for serialization`);
         }
+
+        const targetConstructorName = target.constructor.name;
+        if (!this.significantFieldsForTarget[targetConstructorName]) {
+            this.significantFieldsForTarget[targetConstructorName] = [];
+        }
+        this.significantFieldsForTarget[targetConstructorName].push(propertyKey);
 
         this.propertiesMetaStore[propertyKey] = this.currentMetadata || {
             propertyKey,
@@ -105,5 +113,15 @@ export class MetaStore {
     getTargetKeyMeta(targetKey: string): PropertyMetadata {
         const propertyKey = this.keyPropertyInversion[targetKey];
         return propertyKey ? this.propertiesMetaStore[propertyKey] : null;
+    }
+
+    hasOwnProperty(target: any, propertyKey: string): boolean {
+        if ((this.significantFieldsForTarget[target.constructor.name] || []).includes(propertyKey)) {
+            return true;
+        }
+        while (target.__proto__) {
+            return this.hasOwnProperty(target.__proto__, propertyKey);
+        }
+        return false;
     }
 }

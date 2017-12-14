@@ -1,4 +1,4 @@
-import { JsonNameMetadataKey, ParentKey, MetaStore } from 'utils';
+import { JsonNameMetadataKey, ParentKey, MetaStore } from './../utils';
 
 /**
  * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
