@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { JsonArray, JsonName, deserialize, serialize } from './../../src/index';
+import { JsonArray, JsonName, JsonStruct, deserialize, serialize } from './../../src/index';
 import 'reflect-metadata';
 
 class PartialClass {
@@ -19,6 +19,37 @@ class PartialClass {
 class DataClass {
     @JsonArray(PartialClass)
     parts: Array<PartialClass>;
+}
+
+class ContactPairModel {
+    @JsonName('is_verified') isVerified: boolean;
+
+    @JsonName('value') value: string;
+
+    static fromServer(data: any): ContactPairModel {
+        return deserialize<ContactPairModel>(data, ContactPairModel);
+    }
+}
+
+class ContactModel {
+    @JsonArray(ContactPairModel, 'email')
+    emails: Array<ContactPairModel> = [];
+
+    @JsonArray(ContactPairModel, 'phone')
+    phones: Array<ContactPairModel> = [];
+
+    static fromServer(data: any): ContactModel {
+        return deserialize<ContactModel>(data, ContactModel);
+    }
+}
+
+class UserInfoMoreModel {
+    @JsonStruct('contacts') contacts: ContactModel;
+
+    static fromServer(data: any): UserInfoMoreModel {
+        console.log('one');
+        return deserialize<UserInfoMoreModel>(data, UserInfoMoreModel);
+    }
 }
 
 describe('JsonNameReadonly deserialize case', () => {
@@ -91,4 +122,16 @@ describe('JsonNameReadonly deserialize case', () => {
         expect(deserialize(data, DataClass).parts.length).to.be.eq(1);
         expect(deserialize(data, DataClass).parts[0]).to.be.eql({ fieldOne: 'foo', fieldTwo: 'bar' });
     });
+
+    it('foo', () => {
+        const test = UserInfoMoreModel.fromServer({
+            contacts: {
+                phone: [
+                    { value: '+79037249865', is_verified: true }
+                ],
+                email: []
+            }
+        });
+        expect(test).to.be.not.null;
+    })
 });
