@@ -1,5 +1,7 @@
 # Утилиты сериализации/десериализации для TypeScript и ES6
 [![Build Status](https://travis-ci.org/SoEasy/tserialize.svg?branch=master)](https://travis-ci.org/SoEasy/tserialize)
+<img src="img/logo.svg" width="300" align="center">
+<br/>
 
 ## Установка
 >npm install --save tserialize
