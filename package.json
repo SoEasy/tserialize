@@ -20,6 +20,7 @@
   },
   "keywords": [
     "serialize",
+    "mapper",
     "decorators",
     "deserialize",
     "typescript"
