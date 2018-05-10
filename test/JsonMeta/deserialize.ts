@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, JsonMeta, deserialize } from './../../src';
 import 'reflect-metadata';
 
@@ -28,8 +27,8 @@ describe('JsonMeta deserialize case', () => {
         fieldThree: true
     }, BaseMetaCase);
 
-    it('be equal to reference', () => {
-        expect(instance).to.deep.equal({
+    test('be equal to reference', () => {
+        expect(instance).toEqual({
             inner: {
                 fieldToSerialize: 'hello',
                 fieldTwo: 2,

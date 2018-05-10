@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize } from '../../src/index';
 import 'reflect-metadata';
 
@@ -21,9 +20,9 @@ describe('Serialize extended class', () => {
     const c = new Child();
     const serializedChild = serialize(c);
 
-    it('must run', () => {
-        expect(serializedBase).to.be.not.null;
-        expect(serializedChild).to.eql({ anotherName: 3, field2: 2 });
-        expect(serializedBase).to.eql({ field1: 1, field2: 2 });
+    test('must run', () => {
+        expect(serializedBase).toBeDefined();
+        expect(serializedChild).toEqual({ anotherName: 3, field2: 2 });
+        expect(serializedBase).toEqual({ field1: 1, field2: 2 });
     });
 });

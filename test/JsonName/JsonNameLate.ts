@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, JsonNameLate, deserialize } from './../../src';
 import 'reflect-metadata';
 
@@ -14,8 +13,8 @@ describe('JsonNameLate case', () => {
     const data = { baseField: 'hello', relatedField: 'must be'};
     const instance = deserialize(data, BaseDeserializerCase);
 
-    it('be equal to reference', () => {
-        expect(instance).to.be.eql({
+    test('be equal to reference', () => {
+        expect(instance).toEqual({
             baseField: 'hello!',
             relatedField: 'must be with hello!'
         });

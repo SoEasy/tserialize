@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize } from './../../src';
 import 'reflect-metadata';
 
@@ -17,13 +16,13 @@ describe('Null case serialization', () => {
     const instance = new NullCase();
     const serialized = serialize(instance);
 
-    it('dont have properties', () => {
-        expect(serialized).not.have.property('firstField');
-        expect(serialized).not.have.property('secondField');
-        expect(serialized).not.have.property('thirdField');
+    test('dont have properties', () => {
+        expect(serialized).not.toHaveProperty('firstField');
+        expect(serialized).not.toHaveProperty('secondField');
+        expect(serialized).not.toHaveProperty('thirdField');
     });
 
-    it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({});
+    test('be equal to reference', () => {
+        expect(serialized).toEqual({});
     });
 });

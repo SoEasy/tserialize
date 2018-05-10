@@ -1,6 +1,6 @@
 {
   "name": "tserialize",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "TypeScript serialize utils",
   "types": "index.d.ts",
   "typescript": {
@@ -10,7 +10,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha -r ts-node/register test/**/*.ts",
+    "test": "jest",
     "lint-code": "node_modules/.bin/tslint -c ./tslint.json -p ./tsconfig.json --type-check",
     "build": "webpack"
   },
@@ -32,11 +32,8 @@
   },
   "homepage": "https://github.com/SoEasy/tserialize#readme",
   "devDependencies": {
-    "@types/chai": "^4.0.3",
-    "@types/mocha": "^2.2.41",
-    "chai": "4.1.1",
     "dts-bundle": "0.7.2",
-    "mocha": "3.5.0",
+    "jest": "22.4.3",
     "nyc": "11.2.1",
     "ts-loader": "2.3.2",
     "ts-node": "3.3.0",
@@ -46,5 +43,16 @@
   },
   "dependencies": {
     "reflect-metadata": "0.1.10"
+  },
+  "jest": {
+    "verbose": true,
+    "transform": {
+      "^.+\\.ts$": "./test-preprocessor.js"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "ts"
+    ],
+    "testRegex": "test/.+/.+\\.ts"
   }
 }

@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize, deserialize } from './../../src';
 import 'reflect-metadata';
 
@@ -16,16 +15,16 @@ describe('Base named serialization case', () => {
     instance.ignoredField = 2;
     const serialized = serialize(instance);
 
-    it('have property', () => {
-        expect(serialized).have.property('custom_name');
+    test('have property', () => {
+        expect(serialized).toHaveProperty('custom_name');
     });
 
-    it('dont have undecorated property', () => {
-        expect(serialized).not.have.property('ignoredField');
+    test('dont have undecorated property', () => {
+        expect(serialized).not.toHaveProperty('ignoredField');
     });
 
-    it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({custom_name: referenceValue});
+    test('be equal to reference', () => {
+        expect(serialized).toEqual({custom_name: referenceValue});
     });
 });
 
@@ -34,19 +33,19 @@ describe('Base named deserialization case', () => {
     const data = {custom_name: referenceValue, ignoredField: 2};
     const instance = deserialize(data, BaseNamedCase);
 
-    it('have property', () => {
-        expect(instance).have.property('fieldToSerialize');
+    test('have property', () => {
+        expect(instance).toHaveProperty('fieldToSerialize');
     });
 
-    it('dont have custom_name property', () => {
-        expect(instance).not.have.property('custom_name');
+    test('dont have custom_name property', () => {
+        expect(instance).not.toHaveProperty('custom_name');
     });
 
-    it('dont have undecorated property', () => {
-        expect(instance).not.have.property('ignoredField');
+    test('dont have undecorated property', () => {
+        expect(instance).not.toHaveProperty('ignoredField');
     });
 
-    it('be equal to reference', () => {
-        expect(instance).to.deep.equal({fieldToSerialize: referenceValue});
+    test('be equal to reference', () => {
+        expect(instance).toEqual({fieldToSerialize: referenceValue});
     });
 });
