@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize } from './../../src';
 import 'reflect-metadata';
 
@@ -16,15 +15,15 @@ describe('Custom serializer case', () => {
     instance.ignoredField = 2;
     const serialized = serialize(instance);
 
-    it('have property', () => {
-        expect(serialized).have.property('fieldToSerialize');
+    test('have property', () => {
+        expect(serialized).toHaveProperty('fieldToSerialize');
     });
 
-    it('dont have undecorated property', () => {
-        expect(serialized).not.have.property('ignoredField');
+    test('dont have undecorated property', () => {
+        expect(serialized).not.toHaveProperty('ignoredField');
     });
 
-    it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({fieldToSerialize: `${referenceValue}!`});
+    test('be equal to reference', () => {
+        expect(serialized).toEqual({fieldToSerialize: `${referenceValue}!`});
     });
 });

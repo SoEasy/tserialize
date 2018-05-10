@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize } from '../../src/index';
 import 'reflect-metadata';
 
@@ -30,15 +29,15 @@ describe('Serialize extended class', () => {
     const c2 = new AnotherChild();
     const serializedAnotherChild = serialize(c2);
 
-    it('Когда в дочерних классах одинаковые имена, они вызовут свои сериализаторы', () => {
-        expect(serializedChild).to.eql({ anotherName: 5, field2: 2 });
-        expect(c1.log()).to.eql(3);
-        expect(serializedAnotherChild).to.eql({ anotherName: 7, field2: 2 });
-        expect(c2.log()).to.eql(4);
+    test('Когда в дочерних классах одинаковые имена, они вызовут свои сериализаторы', () => {
+        expect(serializedChild).toEqual({ anotherName: 5, field2: 2 });
+        expect(c1.log()).toBe(3);
+        expect(serializedAnotherChild).toEqual({ anotherName: 7, field2: 2 });
+        expect(c2.log()).toBe(4);
     });
 
-    it('Родительские методы должны быть корректно доступны у дочерних классов', () => {
-        expect(c1.log()).to.eql(3);
-        expect(c2.log()).to.eql(4);
+    test('Родительские методы должны быть корректно доступны у дочерних классов', () => {
+        expect(c1.log()).toBe(3);
+        expect(c2.log()).toBe(4);
     });
 });

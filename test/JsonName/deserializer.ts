@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, deserialize } from './../../src';
 import 'reflect-metadata';
 
@@ -19,16 +18,16 @@ describe('Custom deserializer case', () => {
     const data = { fieldToSerialize: referenceValue};
     const instance = deserialize(data, BaseDeserializerCase);
 
-    it('have property', () => {
-        expect(instance).have.property('fieldToSerialize');
+    test('have property', () => {
+        expect(instance).toHaveProperty('fieldToSerialize');
     });
 
-    it('dont have undecorated property', () => {
-        expect(instance).not.have.property('ignoredField');
+    test('dont have undecorated property', () => {
+        expect(instance).not.toHaveProperty('ignoredField');
     });
 
-    it('be equal to reference', () => {
-        expect(instance).to.deep.equal({fieldToSerialize: `${referenceValue}!`});
+    test('be equal to reference', () => {
+        expect(instance).toEqual({fieldToSerialize: `${referenceValue}!`});
     });
 });
 
@@ -37,7 +36,7 @@ describe('Deserializer must receive raw data', () => {
     const data = { field: referenceValue, related: '!' };
     const instance = deserialize(data, DeserializeWithRawData);
 
-    it('must receive raw data', () => {
-        expect(instance).to.be.eql({field: `${referenceValue}!${referenceValue}`});
+    test('must receive raw data', () => {
+        expect(instance).toEqual({field: `${referenceValue}!${referenceValue}`});
     });
 });

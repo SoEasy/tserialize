@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize } from './../../src';
 import 'reflect-metadata';
 
@@ -23,16 +22,16 @@ describe('Serializer with instance case', () => {
     instance.ignoredField = 2;
     const serialized = serialize(instance);
 
-    it('have property', () => {
-        expect(serialized).have.property('fieldToSerialize');
+    test('have property', () => {
+        expect(serialized).toHaveProperty('fieldToSerialize');
     });
 
-    it('dont have undecorated property', () => {
-        expect(serialized).not.have.property('ignoredField');
+    test('dont have undecorated property', () => {
+        expect(serialized).not.toHaveProperty('ignoredField');
     });
 
-    it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({
+    test('be equal to reference', () => {
+        expect(serialized).toEqual({
             fieldToSerialize: `${referenceValue}${instance.ignoredField}`,
         });
     });
@@ -41,12 +40,12 @@ describe('Serializer with instance case', () => {
         const v = new SerializerUndefinedValue();
         const serialized = serialize(v);
 
-        it('should have property', () => {
-            expect(serialized).have.property('nullField');
+        test('should have property', () => {
+            expect(serialized).toHaveProperty('nullField');
         });
 
-        it('should be correct', () => {
-            expect(serialized).to.deep.equal({nullField: 3});
+        test('should be correct', () => {
+            expect(serialized).toEqual({nullField: 3});
         });
     });
 

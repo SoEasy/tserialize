@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, serialize } from '../../src/index';
 import 'reflect-metadata';
 
@@ -32,10 +31,10 @@ describe('Serialize extended class', () => {
     const c2 = new ChildTwo();
     const serialized1 = serialize(c1);
 
-    it('must run', () => {
+    test('must run', () => {
         console.log(serialized1);
-        expect(c2).to.be.not.null;
-        expect(serialized1).to.eql({ field1: 1, field2: 2, c1: 'Im one!' });
-        expect(Base.calledNumber).to.eql(1);
+        expect(c2).toBeDefined();
+        expect(serialized1).toEqual({ field1: 1, field2: 2, c1: 'Im one!' });
+        expect(Base.calledNumber).toBe(1);
     });
 });

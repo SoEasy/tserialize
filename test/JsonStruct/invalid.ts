@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { JsonName, JsonStruct, serialize } from './../../src';
 import 'reflect-metadata';
 
@@ -34,7 +33,7 @@ describe('JsonStruct without toServer case', () => {
 
     const serialized = serialize(instance);
 
-    it('be equal to reference', () => {
-        expect(serialized).to.deep.equal({inner: { fieldToSerialize: referenceValue, customName: 2 } , customInner: {}});
+    test('be equal to reference', () => {
+        expect(serialized).toEqual({inner: { fieldToSerialize: referenceValue, customName: 2 } , customInner: {}});
     });
 });
