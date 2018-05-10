@@ -233,15 +233,13 @@ var ClassMetaStore = /** @class */ (function () {
         var ownPropertiesKeys = Object.keys(this.propertiesMetaStore);
         for (var _i = 0, ownPropertiesKeys_1 = ownPropertiesKeys; _i < ownPropertiesKeys_1.length; _i++) {
             var ownPropertyKey = ownPropertiesKeys_1[_i];
-            // TODO make get function
-            var ownPropertyMetadata = this.propertiesMetaStore[ownPropertyKey];
+            var ownPropertyMetadata = this.getMetadataByPropertyKey(ownPropertyKey);
             // Если поле не унаследовано - просто закинем в хранилище и добавим инверсию
             if (!newPropertiesMetaStore[ownPropertyKey]) {
                 newPropertiesMetaStore[ownPropertyKey] = this.propertiesMetaStore[ownPropertyKey];
                 newPropertyKeyInversion[ownPropertyMetadata.rawKey] = ownPropertyMetadata.propertyKey;
                 continue;
             }
-            // TODO make get function
             var overridePropertyMetadata = newPropertiesMetaStore[ownPropertyKey];
             delete newPropertyKeyInversion[overridePropertyMetadata.rawKey];
             // В общем, все кроме propertyKey и rawKey по умолчанию отсутствуют, и Object.assign нормально их накинет.
