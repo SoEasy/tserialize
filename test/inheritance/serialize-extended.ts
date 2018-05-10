@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { JsonName, serialize } from './../../src';
+import { JsonName, serialize } from '../../src/index';
 import 'reflect-metadata';
 
 class Base {

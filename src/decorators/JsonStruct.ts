@@ -1,14 +1,32 @@
-import { MetaStore } from './../utils';
+import { PropertyMetaBuilder, RootMetaStore } from './../core';
 import { deserialize } from './../deserialize';
 
-export function JsonStruct(name?: string): (target: object, propertyKey: string) => void {
+/**
+ * Декоратор для сериализаци-дерериализации аггрегированных моделей.
+ * Для сериализации использует toServer метод экземпляра.Если его нет - просто serialize.
+ * Для десериализации использует статический метод fromServer. Если его нет - просто deserialize.
+ * @param TargetClass - конструктор аггрегированной модели
+ * @param {string} rawName - кастомное имя поля в сырых данных
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
+export function JsonStruct(TargetClass?: any, rawName?: string): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {
-        const proto = (Reflect as any).getMetadata('design:type', target, propertyKey);
-        const metaStore: MetaStore = MetaStore.getMetaStore(target);
+        const isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
 
-        const rawKey = name ? name : propertyKey;
-        const deserializer = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
+        if (isDeprecatedUsage) {
+            const targetClassName = (Reflect as any).getMetadata('design:type', target, propertyKey).name;
+            console.error(
+                `JsonStruct signature has changed, use(copy it) "JsonStruct(${targetClassName}${TargetClass ? `, '${TargetClass}'` : ''})"`
+            );
+        }
 
-        metaStore.make(propertyKey, target).name(rawKey).deserializator(deserializer).struct();
+        const proto = isDeprecatedUsage ? (Reflect as any).getMetadata('design:type', target, propertyKey) : TargetClass;
+        const name = isDeprecatedUsage ? TargetClass : rawName;
+
+        const deserializeFunc = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
+
+        const propertyMetadata = PropertyMetaBuilder.make(propertyKey, name).deserializer(deserializeFunc).struct().raw;
+        RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }

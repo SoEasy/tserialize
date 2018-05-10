@@ -90,5 +90,7 @@ describe('JsonNameReadonly deserialize case', () => {
         const data = { parts: [{ fieldOne: 'foo', field_two: 'bar' }] };
         expect(deserialize(data, DataClass).parts.length).to.be.eq(1);
         expect(deserialize(data, DataClass).parts[0]).to.be.eql({ fieldOne: 'foo', fieldTwo: 'bar' });
+        expect(deserialize(data, DataClass) instanceof DataClass).to.be.true;
+        expect(deserialize(data, DataClass).parts[0] instanceof PartialClass).to.be.true;
     });
 });

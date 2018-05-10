@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 16);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -83,11 +83,14 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var store_1 = __webpack_require__(14);
-exports.MetaStore = store_1.MetaStore;
-var consts_1 = __webpack_require__(5);
-exports.JsonNameMetadataKey = consts_1.JsonNameMetadataKey;
+var root_store_1 = __webpack_require__(9);
+exports.RootMetaStore = root_store_1.RootMetaStore;
+var consts_1 = __webpack_require__(7);
 exports.ParentKey = consts_1.ParentKey;
+var class_meta_store_1 = __webpack_require__(4);
+exports.ClassMetaStore = class_meta_store_1.ClassMetaStore;
+var property_meta_builder_1 = __webpack_require__(8);
+exports.PropertyMetaBuilder = property_meta_builder_1.PropertyMetaBuilder;
 
 
 /***/ }),
@@ -97,7 +100,7 @@ exports.ParentKey = consts_1.ParentKey;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var deserialize_1 = __webpack_require__(11);
+var deserialize_1 = __webpack_require__(15);
 exports.deserialize = deserialize_1.deserialize;
 
 
@@ -108,12 +111,21 @@ exports.deserialize = deserialize_1.deserialize;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
+var core_1 = __webpack_require__(0);
+/**
+ * Декоратор для примитивного маппинга поля между экземпляром и сырыми данными
+ * @param {string} name - кастомное имя поля, которое будет в сырых данных
+ * @param {(value: T, instance: any) => any} serialize - функция-сериализатор, получает значение поля и экземпляр, вовзвращает значение.
+ * Если значения нет - сериализатор не будет вызван и поле не попадет в результирующий объект.
+ * Если сериализатор вернул null/undefined - значение так же не попадет в результирующий объект.
+ * @param {(rawValue: any, rawData?: any) => T} deserialize - функция-десериализатор
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
 function JsonName(name, serialize, deserialize) {
     return function (target, propertyKey) {
-        var metaStore = utils_1.MetaStore.getMetaStore(target);
-        var rawKey = name ? name : propertyKey;
-        metaStore.make(propertyKey, target).name(rawKey).serializator(serialize).deserializator(deserialize);
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, name).serializer(serialize).deserializer(deserialize).raw;
+        core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
 exports.JsonName = JsonName;
@@ -126,7 +138,7 @@ exports.JsonName = JsonName;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
+var core_1 = __webpack_require__(0);
 function serializeValue(metadata, value, instance) {
     if (!metadata) {
         return;
@@ -143,7 +155,7 @@ function serializeValue(metadata, value, instance) {
 function assignSerializedValueToResult(metadata, serializedValue, result) {
     if (![null, undefined].includes(serializedValue)) {
         var jsonName = metadata.rawKey;
-        if (jsonName !== utils_1.ParentKey) {
+        if (jsonName !== core_1.ParentKey) {
             result[jsonName] = serializedValue;
         }
         else {
@@ -153,21 +165,18 @@ function assignSerializedValueToResult(metadata, serializedValue, result) {
 }
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
- *     поля, у которых есть декоратор и задано начальное значение.
+ *     поля, у которых есть декоратор и есть значение.
  * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
  * @returns {{}} - обычный объект JS
  */
 function serialize(model) {
     var result = {};
-    var target = Object.getPrototypeOf(model);
-    var metaStore = utils_1.MetaStore.getMetaStore(target);
-    var modelKeys = metaStore.getPropertyKeys();
+    var targetClass = Object.getPrototypeOf(model);
+    var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
+    var modelKeys = metaStore.propertyKeys;
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
         var propertyKey = modelKeys_1[_i];
-        if (!metaStore.hasOwnProperty(target, propertyKey)) {
-            continue;
-        }
-        var metadata = metaStore.getPropertyMeta(propertyKey);
+        var metadata = metaStore.getMetadataByPropertyKey(propertyKey);
         var serializedValue = serializeValue(metadata, model[propertyKey], model);
         assignSerializedValueToResult(metadata, serializedValue, result);
     }
@@ -183,18 +192,68 @@ exports.serialize = serialize;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
-var deserialize_1 = __webpack_require__(1);
-function JsonStruct(name) {
-    return function (target, propertyKey) {
-        var proto = Reflect.getMetadata('design:type', target, propertyKey);
-        var metaStore = utils_1.MetaStore.getMetaStore(target);
-        var rawKey = name ? name : propertyKey;
-        var deserializer = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
-        metaStore.make(propertyKey, target).name(rawKey).deserializator(deserializer).struct();
+var utils_1 = __webpack_require__(5);
+var ClassMetaStore = /** @class */ (function () {
+    function ClassMetaStore() {
+        /**
+         * Хранилище метаданных для полей класса
+         */
+        this.propertiesMetaStore = {};
+        /**
+         * @description Хранилище зависимостей "имя сырого поля" <-> "имя поля в объекте"
+         */
+        this.propertyKeyInversion = {};
+    }
+    ClassMetaStore.prototype.addPropertyMetadata = function (propertyMetadata) {
+        this.propertiesMetaStore[propertyMetadata.propertyKey] = propertyMetadata;
+        this.propertyKeyInversion[propertyMetadata.rawKey] = propertyMetadata.propertyKey;
     };
-}
-exports.JsonStruct = JsonStruct;
+    Object.defineProperty(ClassMetaStore.prototype, "propertyKeys", {
+        get: function () {
+            return Object.keys(this.propertiesMetaStore);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * Получить метаданные поля по ключу нативного экземпляра. Нужно для сериализации
+     */
+    ClassMetaStore.prototype.getMetadataByPropertyKey = function (propertyKey) {
+        return this.propertiesMetaStore[propertyKey];
+    };
+    /**
+     * Получить метаданные поля по ключу сырых данных. Нужно для десериализации
+     */
+    ClassMetaStore.prototype.getMetadataByRawKey = function (rawKey) {
+        return this.propertiesMetaStore[this.propertyKeyInversion[rawKey]];
+    };
+    ClassMetaStore.prototype.updateWithParentStore = function (parentStore) {
+        var newPropertiesMetaStore = utils_1.clone(parentStore.propertiesMetaStore);
+        var newPropertyKeyInversion = utils_1.clone(parentStore.propertyKeyInversion);
+        var ownPropertiesKeys = Object.keys(this.propertiesMetaStore);
+        for (var _i = 0, ownPropertiesKeys_1 = ownPropertiesKeys; _i < ownPropertiesKeys_1.length; _i++) {
+            var ownPropertyKey = ownPropertiesKeys_1[_i];
+            var ownPropertyMetadata = this.getMetadataByPropertyKey(ownPropertyKey);
+            // Если поле не унаследовано - просто закинем в хранилище и добавим инверсию
+            if (!newPropertiesMetaStore[ownPropertyKey]) {
+                newPropertiesMetaStore[ownPropertyKey] = this.propertiesMetaStore[ownPropertyKey];
+                newPropertyKeyInversion[ownPropertyMetadata.rawKey] = ownPropertyMetadata.propertyKey;
+                continue;
+            }
+            var overridePropertyMetadata = newPropertiesMetaStore[ownPropertyKey];
+            delete newPropertyKeyInversion[overridePropertyMetadata.rawKey];
+            // В общем, все кроме propertyKey и rawKey по умолчанию отсутствуют, и Object.assign нормально их накинет.
+            // Соответственно если поле в родителе было late или struct, а у потомка будет просто JsonName - сменятся имена,
+            // если навешаны серилизаторы-десериализаторы - они тоже.
+            Object.assign(overridePropertyMetadata, ownPropertyMetadata);
+            newPropertyKeyInversion[overridePropertyMetadata.rawKey] = overridePropertyMetadata.propertyKey;
+        }
+        this.propertiesMetaStore = newPropertiesMetaStore;
+        this.propertyKeyInversion = newPropertyKeyInversion;
+    };
+    return ClassMetaStore;
+}());
+exports.ClassMetaStore = ClassMetaStore;
 
 
 /***/ }),
@@ -204,8 +263,30 @@ exports.JsonStruct = JsonStruct;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JsonNameMetadataKey = 'JsonName';
-exports.ParentKey = '@JsonNameParentKey';
+function getNameOfClass(target) {
+    return target.constructor.name;
+}
+exports.getNameOfClass = getNameOfClass;
+function getParentClass(target) {
+    return Object.getPrototypeOf(target);
+}
+exports.getParentClass = getParentClass;
+function clone(from) {
+    if (from === null || typeof from !== 'object')
+        return from;
+    if (from.constructor !== Object && from.constructor !== Array)
+        return from;
+    if (from.constructor === Date || from.constructor === RegExp || from.constructor === Function ||
+        from.constructor === String || from.constructor === Number || from.constructor === Boolean) {
+        return new from.constructor(from);
+    }
+    var to = new from.constructor();
+    for (var name_1 in from) {
+        to[name_1] = typeof to[name_1] === 'undefined' ? clone(from[name_1]) : to[name_1];
+    }
+    return to;
+}
+exports.clone = clone;
 
 
 /***/ }),
@@ -215,17 +296,17 @@ exports.ParentKey = '@JsonNameParentKey';
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonArray_1 = __webpack_require__(7);
+var JsonArray_1 = __webpack_require__(10);
 exports.JsonArray = JsonArray_1.JsonArray;
-var JsonMeta_1 = __webpack_require__(8);
+var JsonMeta_1 = __webpack_require__(11);
 exports.JsonMeta = JsonMeta_1.JsonMeta;
 var JsonName_1 = __webpack_require__(2);
 exports.JsonName = JsonName_1.JsonName;
-var JsonNameReadonly_1 = __webpack_require__(10);
+var JsonNameReadonly_1 = __webpack_require__(13);
 exports.JsonNameReadonly = JsonNameReadonly_1.JsonNameReadonly;
-var JsonStruct_1 = __webpack_require__(4);
+var JsonStruct_1 = __webpack_require__(14);
 exports.JsonStruct = JsonStruct_1.JsonStruct;
-var JsonNameLate_1 = __webpack_require__(9);
+var JsonNameLate_1 = __webpack_require__(12);
 exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
 
 
@@ -236,9 +317,118 @@ exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ParentKey = '@JsonNameParentKey';
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var PropertyMetaBuilder = /** @class */ (function () {
+    function PropertyMetaBuilder() {
+        this.data = {
+            propertyKey: null,
+            rawKey: null
+        };
+    }
+    PropertyMetaBuilder.make = function (propertyKey, name) {
+        var retVal = new PropertyMetaBuilder();
+        retVal.data.propertyKey = propertyKey;
+        retVal.data.rawKey = name || propertyKey;
+        return retVal;
+    };
+    PropertyMetaBuilder.prototype.struct = function () {
+        this.data.isStruct = true;
+        return this;
+    };
+    PropertyMetaBuilder.prototype.late = function () {
+        this.data.isLate = true;
+        return this;
+    };
+    PropertyMetaBuilder.prototype.serializer = function (serializeFunc) {
+        if (!serializeFunc) {
+            return this;
+        }
+        this.data.serialize = serializeFunc;
+        return this;
+    };
+    PropertyMetaBuilder.prototype.deserializer = function (deserializeFunc) {
+        if (!deserializeFunc) {
+            return this;
+        }
+        this.data.deserialize = deserializeFunc;
+        return this;
+    };
+    Object.defineProperty(PropertyMetaBuilder.prototype, "raw", {
+        get: function () {
+            return this.data;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return PropertyMetaBuilder;
+}());
+exports.PropertyMetaBuilder = PropertyMetaBuilder;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var class_meta_store_1 = __webpack_require__(4);
+var utils_1 = __webpack_require__(5);
+var RootMetaStore = /** @class */ (function () {
+    function RootMetaStore() {
+    }
+    RootMetaStore.setupPropertyMetadata = function (targetClass, propertyMetadata) {
+        if (!this.store.has(targetClass)) {
+            this.store.set(targetClass, new class_meta_store_1.ClassMetaStore());
+        }
+        var classFieldsMetaStore = this.store.get(targetClass);
+        classFieldsMetaStore.addPropertyMetadata(propertyMetadata);
+        this.updateClassMetaByParent(targetClass);
+    };
+    RootMetaStore.updateClassMetaByParent = function (targetClass) {
+        var parentClass = utils_1.getParentClass(targetClass);
+        if (utils_1.getNameOfClass(parentClass) === 'Object') {
+            return;
+        }
+        var parentStore = this.store.get(utils_1.getParentClass(targetClass));
+        var targetStore = this.store.get(targetClass);
+        targetStore.updateWithParentStore(parentStore);
+    };
+    RootMetaStore.getClassMetaStore = function (targetClass) {
+        return this.store.get(targetClass);
+    };
+    RootMetaStore.store = new Map();
+    return RootMetaStore;
+}());
+exports.RootMetaStore = RootMetaStore;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(2);
-var serialize_1 = __webpack_require__(13);
+var serialize_1 = __webpack_require__(17);
 var deserialize_1 = __webpack_require__(1);
+/**
+ * Декоратор для сериализации-десериализации массивов экземпляров.
+ * @param proto - конструктор класса, экземпляры которой лежат в массиве
+ * @param {string} name - кастомное имя поля в сырых данных
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
 function JsonArray(proto, name) {
     var serializer = function (value) {
         if (!value || !(value instanceof Array)) {
@@ -262,46 +452,78 @@ exports.JsonArray = JsonArray;
 
 
 /***/ }),
-/* 8 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
-var JsonStruct_1 = __webpack_require__(4);
-function JsonMeta() {
-    return JsonStruct_1.JsonStruct.call(null, utils_1.ParentKey);
+var core_1 = __webpack_require__(0);
+var deserialize_1 = __webpack_require__(1);
+/**
+ * Декоратор без аргументов для объявления структуры, чтобы мапить плоские данные в аггрегированные объекты
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
+function JsonMeta(TargetClass) {
+    return function (target, propertyKey) {
+        var isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
+        if (isDeprecatedUsage) {
+            var targetClassName = Reflect.getMetadata('design:type', target, propertyKey).name;
+            console.error("JsonMeta signature has changed, use(copy it) \"JsonMeta(" + targetClassName + ")\"");
+        }
+        var proto = isDeprecatedUsage ? Reflect.getMetadata('design:type', target, propertyKey) : TargetClass;
+        var deserializeFunc = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, core_1.ParentKey).deserializer(deserializeFunc).struct().raw;
+        core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
+    };
 }
 exports.JsonMeta = JsonMeta;
 
 
 /***/ }),
-/* 9 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
+var core_1 = __webpack_require__(0);
+/**
+ * Декоратор для маппинга, десериализация которого работает после всех остальных полей. Сиг
+ * @param {string} name - кастомное имя поля, которое будет в сырых данных
+ * @param {(value: T, instance: any) => any} serialize - функция-сериализатор, получает значение поля и экземпляр, вовзвращает значение.
+ * Если значения нет - сериализатор не будет вызван и поле не попадет в результирующий объект.
+ * Если сериализатор вернул null/undefined - значение так же не попадет в результирующий объект.
+ * @param {(rawValue: any, rawData?: any) => T} deserialize - функция-десериализатор.
+ * Работает когда все остальные поля объекта уже десериализованы
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
 function JsonNameLate(name, serialize, deserialize) {
     return function (target, propertyKey) {
-        var metaStore = utils_1.MetaStore.getMetaStore(target);
-        var rawKey = name ? name : propertyKey;
-        metaStore.make(propertyKey, target).name(rawKey).serializator(serialize).deserializator(deserialize).late();
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, name).serializer(serialize).deserializer(deserialize).late().raw;
+        core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
 exports.JsonNameLate = JsonNameLate;
 
 
 /***/ }),
-/* 10 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(2);
+/**
+ * Декоратор для десериализации поля с сервера, но не на сервер
+ * @param {string} name - кастомное имя поля, которое будет в сырых данных
+ * @param {(rawValue: any, rawData?: any) => T} deserialize - функция-десериализатор
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
 function JsonNameReadonly(name, deserialize) {
     return JsonName_1.JsonName.call(null, name, function () { return null; }, deserialize);
 }
@@ -309,27 +531,63 @@ exports.JsonNameReadonly = JsonNameReadonly;
 
 
 /***/ }),
-/* 11 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(0);
+var core_1 = __webpack_require__(0);
+var deserialize_1 = __webpack_require__(1);
 /**
- * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
- * @param data - данные от сервера
- * @param cls - класс, в экземпляр которого надо превратить данные
- * @returns {T} - экземпляр класса cls, заполненный данными
+ * Декоратор для сериализаци-дерериализации аггрегированных моделей.
+ * Для сериализации использует toServer метод экземпляра.Если его нет - просто serialize.
+ * Для десериализации использует статический метод fromServer. Если его нет - просто deserialize.
+ * @param TargetClass - конструктор аггрегированной модели
+ * @param {string} rawName - кастомное имя поля в сырых данных
+ * @returns {(target: object, propertyKey: string) => void} - декоратор
+ * @constructor
+ */
+function JsonStruct(TargetClass, rawName) {
+    return function (target, propertyKey) {
+        var isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
+        if (isDeprecatedUsage) {
+            var targetClassName = Reflect.getMetadata('design:type', target, propertyKey).name;
+            console.error("JsonStruct signature has changed, use(copy it) \"JsonStruct(" + targetClassName + (TargetClass ? ", '" + TargetClass + "'" : '') + ")\"");
+        }
+        var proto = isDeprecatedUsage ? Reflect.getMetadata('design:type', target, propertyKey) : TargetClass;
+        var name = isDeprecatedUsage ? TargetClass : rawName;
+        var deserializeFunc = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, name).deserializer(deserializeFunc).struct().raw;
+        core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
+    };
+}
+exports.JsonStruct = JsonStruct;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var core_1 = __webpack_require__(0);
+/**
+ * Хэлпер для десериализации сырых данных в экземпляр данного класса
+ * @param data - сырые данные
+ * @param {{new(...args: any[]): T}} cls - конструктор класса, в экземпляр которого надо превратить данные
+ * @returns {T} - экземпляр
  */
 function deserialize(data, cls) {
     var retVal = new cls();
-    var target = Object.getPrototypeOf(retVal);
-    var metaStore = Reflect.getMetadata(utils_1.JsonNameMetadataKey, target);
+    var targetClass = Object.getPrototypeOf(retVal);
+    var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
     var lateFields = [];
-    for (var _i = 0, _a = metaStore.getPropertyKeys(); _i < _a.length; _i++) {
-        var propertyKey = _a[_i];
-        var serializeProps = metaStore.getPropertyMeta(propertyKey);
+    var modelKeys = metaStore.propertyKeys;
+    for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
+        var propertyKey = modelKeys_1[_i];
+        var serializeProps = metaStore.getMetadataByPropertyKey(propertyKey);
         if (serializeProps.isLate) {
             lateFields.push(propertyKey);
             continue;
@@ -337,20 +595,20 @@ function deserialize(data, cls) {
         if (serializeProps) {
             var deserialize_1 = serializeProps.deserialize;
             var jsonName = serializeProps.rawKey;
-            var jsonValue = jsonName !== utils_1.ParentKey ? data[jsonName] : data;
+            var jsonValue = jsonName !== core_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
                 retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue, data) : jsonValue;
             }
         }
     }
     // TODO remove duplicate
-    for (var _b = 0, lateFields_1 = lateFields; _b < lateFields_1.length; _b++) {
-        var propertyKey = lateFields_1[_b];
-        var serializeProps = metaStore.getPropertyMeta(propertyKey);
+    for (var _a = 0, lateFields_1 = lateFields; _a < lateFields_1.length; _a++) {
+        var propertyKey = lateFields_1[_a];
+        var serializeProps = metaStore.getMetadataByPropertyKey(propertyKey);
         if (serializeProps) {
             var deserialize_2 = serializeProps.deserialize;
             var jsonName = serializeProps.rawKey;
-            var jsonValue = jsonName !== utils_1.ParentKey ? data[jsonName] : data;
+            var jsonValue = jsonName !== core_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
                 retVal[serializeProps.propertyKey] = deserialize_2 ? deserialize_2(jsonValue, retVal) : jsonValue;
             }
@@ -362,7 +620,7 @@ exports.deserialize = deserialize;
 
 
 /***/ }),
-/* 12 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -382,7 +640,7 @@ exports.deserialize = deserialize_1.deserialize;
 
 
 /***/ }),
-/* 13 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -390,125 +648,6 @@ exports.deserialize = deserialize_1.deserialize;
 Object.defineProperty(exports, "__esModule", { value: true });
 var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var consts_1 = __webpack_require__(5);
-var MetaStore = /** @class */ (function () {
-    function MetaStore() {
-        /**
-         * @description Для имени поля в классе хранит его мета-информацию
-         */
-        this.propertiesMetaStore = {};
-        /**
-         * @description Хранит зависимость "сырое поле" <-> "поле в объекте"
-         */
-        this.keyPropertyInversion = {};
-        /**
-         * @description Простое хранилище всех декорированных полей, нужно для восстановления объекта
-         */
-        this.propertyKeys = [];
-        /**
-         * @description Поле для хранения промежуточного значения ключа, с которым работает builder
-         */
-        this.currentPropertyKey = null;
-        this.significantFieldsForTarget = {};
-    }
-    Object.defineProperty(MetaStore.prototype, "currentMetadata", {
-        get: function () {
-            return this.propertiesMetaStore[this.currentPropertyKey];
-        },
-        enumerable: true,
-        configurable: true
-    });
-    MetaStore.getMetaStore = function (target) {
-        if (!Reflect.hasMetadata(consts_1.JsonNameMetadataKey, target)) {
-            Reflect.defineMetadata(consts_1.JsonNameMetadataKey, new MetaStore(), target);
-        }
-        return Reflect.getMetadata(consts_1.JsonNameMetadataKey, target);
-    };
-    MetaStore.prototype.make = function (propertyKey, target) {
-        this.currentPropertyKey = propertyKey;
-        if (this.currentMetadata) {
-            console.warn("Property \"" + propertyKey + "\" already have metadata for serialization");
-        }
-        var targetConstructorName = target.constructor.name;
-        if (!this.significantFieldsForTarget[targetConstructorName]) {
-            this.significantFieldsForTarget[targetConstructorName] = [];
-        }
-        this.significantFieldsForTarget[targetConstructorName].push(propertyKey);
-        this.propertiesMetaStore[propertyKey] = this.currentMetadata || {
-            propertyKey: propertyKey,
-            rawKey: propertyKey,
-            isStruct: false,
-            isLate: false
-        };
-        this.propertyKeys.push(propertyKey);
-        this.keyPropertyInversion[propertyKey] = propertyKey;
-        return this;
-    };
-    MetaStore.prototype.name = function (rawKey) {
-        if (!rawKey) {
-            return this;
-        }
-        this.currentMetadata.rawKey = rawKey;
-        delete this.keyPropertyInversion[this.currentPropertyKey];
-        this.keyPropertyInversion[rawKey] = this.currentPropertyKey;
-        return this;
-    };
-    MetaStore.prototype.struct = function () {
-        this.currentMetadata.isStruct = true;
-        return this;
-    };
-    MetaStore.prototype.late = function () {
-        this.currentMetadata.isLate = true;
-        return this;
-    };
-    MetaStore.prototype.serializator = function (serializator) {
-        if (!serializator) {
-            return this;
-        }
-        this.currentMetadata.serialize = serializator;
-        return this;
-    };
-    MetaStore.prototype.deserializator = function (deserializator) {
-        if (!deserializator) {
-            return this;
-        }
-        this.currentMetadata.deserialize = deserializator;
-        return this;
-    };
-    MetaStore.prototype.addStructProperty = function (propertyName, target) {
-        console.log('add struct property', propertyName, target, target.fromServer);
-    };
-    MetaStore.prototype.getPropertyMeta = function (propertyKey) {
-        return this.propertiesMetaStore[propertyKey];
-    };
-    MetaStore.prototype.getPropertyKeys = function () {
-        return this.propertyKeys;
-    };
-    MetaStore.prototype.getTargetKeyMeta = function (targetKey) {
-        var propertyKey = this.keyPropertyInversion[targetKey];
-        return propertyKey ? this.propertiesMetaStore[propertyKey] : null;
-    };
-    MetaStore.prototype.hasOwnProperty = function (target, propertyKey) {
-        if ((this.significantFieldsForTarget[target.constructor.name] || []).includes(propertyKey)) {
-            return true;
-        }
-        while (target.__proto__) {
-            return this.hasOwnProperty(target.__proto__, propertyKey);
-        }
-        return false;
-    };
-    return MetaStore;
-}());
-exports.MetaStore = MetaStore;
 
 
 /***/ })

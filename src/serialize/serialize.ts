@@ -1,4 +1,4 @@
-import { MetaStore, PropertyMetadata, ParentKey } from './../utils';
+import { ClassMetaStore, ParentKey, PropertyMetadata, RootMetaStore } from './../core';
 
 function serializeValue(metadata: PropertyMetadata, value: any, instance: any): any {
     if (!metadata) {
@@ -27,22 +27,18 @@ function assignSerializedValueToResult(metadata: PropertyMetadata, serializedVal
 
 /**
  * @description Хэлпер для сериализации классов, имеющих поля с навешанным декоратором JsonName. Сериализует только те
- *     поля, у которых есть декоратор и задано начальное значение.
+ *     поля, у которых есть декоратор и есть значение.
  * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
  * @returns {{}} - обычный объект JS
  */
 export function serialize(model: { [key: string]: any }): object {
     const result = {};
-    const target = Object.getPrototypeOf(model);
+    const targetClass = Object.getPrototypeOf(model);
 
-    const metaStore: MetaStore = MetaStore.getMetaStore(target);
-
-    const modelKeys = metaStore.getPropertyKeys();
+    const metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
+    const modelKeys = metaStore.propertyKeys;
     for (const propertyKey of modelKeys) {
-        if (!metaStore.hasOwnProperty(target, propertyKey)) {
-            continue;
-        }
-        const metadata = metaStore.getPropertyMeta(propertyKey);
+        const metadata = metaStore.getMetadataByPropertyKey(propertyKey);
         const serializedValue = serializeValue(metadata, model[propertyKey], model);
         assignSerializedValueToResult(metadata, serializedValue, result);
     }
