@@ -1,19 +1,20 @@
-import { JsonNameMetadataKey, ParentKey, MetaStore } from './../utils';
+import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
 
 /**
- * @description Хэлпер для разбора данных, пришедших по JSONRPC от сервера в нашу модель
- * @param data - данные от сервера
- * @param cls - класс, в экземпляр которого надо превратить данные
- * @returns {T} - экземпляр класса cls, заполненный данными
+ * Хэлпер для десериализации сырых данных в экземпляр данного класса
+ * @param data - сырые данные
+ * @param {{new(...args: any[]): T}} cls - конструктор класса, в экземпляр которого надо превратить данные
+ * @returns {T} - экземпляр
  */
 export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }): T {
     const retVal = new cls();
-    const target = Object.getPrototypeOf(retVal);
-    const metaStore: MetaStore = (Reflect as any).getMetadata(JsonNameMetadataKey, target);
+    const targetClass = Object.getPrototypeOf(retVal);
+    const metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
     const lateFields: Array<string> = [];
 
-    for (const propertyKey of metaStore.getPropertyKeys()) {
-        const serializeProps = metaStore.getPropertyMeta(propertyKey);
+    const modelKeys = metaStore.propertyKeys;
+    for (const propertyKey of modelKeys) {
+        const serializeProps = metaStore.getMetadataByPropertyKey(propertyKey);
         if (serializeProps.isLate) {
             lateFields.push(propertyKey);
             continue;
@@ -30,7 +31,7 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T })
 
     // TODO remove duplicate
     for (const propertyKey of lateFields) {
-        const serializeProps = metaStore.getPropertyMeta(propertyKey);
+        const serializeProps = metaStore.getMetadataByPropertyKey(propertyKey);
         if (serializeProps) {
             const deserialize = serializeProps.deserialize;
             const jsonName = serializeProps.rawKey;
