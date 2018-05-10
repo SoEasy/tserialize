@@ -42,8 +42,7 @@ export class ClassMetaStore {
         const ownPropertiesKeys = Object.keys(this.propertiesMetaStore);
 
         for (const ownPropertyKey of ownPropertiesKeys) {
-            // TODO make get function
-            const ownPropertyMetadata: PropertyMetadata = this.propertiesMetaStore[ownPropertyKey];
+            const ownPropertyMetadata: PropertyMetadata = this.getMetadataByPropertyKey(ownPropertyKey);
 
             // Если поле не унаследовано - просто закинем в хранилище и добавим инверсию
             if (!newPropertiesMetaStore[ownPropertyKey]) {
@@ -52,7 +51,6 @@ export class ClassMetaStore {
                 continue;
             }
 
-            // TODO make get function
             const overridePropertyMetadata: PropertyMetadata = newPropertiesMetaStore[ownPropertyKey];
             delete newPropertyKeyInversion[overridePropertyMetadata.rawKey];
             // В общем, все кроме propertyKey и rawKey по умолчанию отсутствуют, и Object.assign нормально их накинет.
