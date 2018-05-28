@@ -24,7 +24,7 @@ export function JsonArray(proto: any, name?: string): (target: object, propertyK
   * @returns {(target: object, propertyKey: string) => void} - декоратор
   * @constructor
   */
-export function JsonMeta(TargetClass?: any): (target: object, propertyKey: string) => void;
+export function JsonMeta(TargetClass: any): (target: object, propertyKey: string) => void;
 
 /**
   * Декоратор для примитивного маппинга поля между экземпляром и сырыми данными
@@ -56,7 +56,7 @@ export function JsonNameReadonly<T>(name?: string, deserialize?: (rawValue: any,
   * @returns {(target: object, propertyKey: string) => void} - декоратор
   * @constructor
   */
-export function JsonStruct(TargetClass?: any, rawName?: string): (target: object, propertyKey: string) => void;
+export function JsonStruct(TargetClass: any, rawName?: string): (target: object, propertyKey: string) => void;
 
 /**
   * Декоратор для маппинга, десериализация которого работает после всех остальных полей. Сиг

@@ -467,12 +467,7 @@ var deserialize_1 = __webpack_require__(1);
  */
 function JsonMeta(TargetClass) {
     return function (target, propertyKey) {
-        var isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
-        if (isDeprecatedUsage) {
-            var targetClassName = Reflect.getMetadata('design:type', target, propertyKey).name;
-            console.error("JsonMeta signature has changed, use(copy it) \"JsonMeta(" + targetClassName + ")\"");
-        }
-        var proto = isDeprecatedUsage ? Reflect.getMetadata('design:type', target, propertyKey) : TargetClass;
+        var proto = TargetClass;
         var deserializeFunc = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
         var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, core_1.ParentKey).deserializer(deserializeFunc).struct().raw;
         core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
@@ -550,15 +545,9 @@ var deserialize_1 = __webpack_require__(1);
  */
 function JsonStruct(TargetClass, rawName) {
     return function (target, propertyKey) {
-        var isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
-        if (isDeprecatedUsage) {
-            var targetClassName = Reflect.getMetadata('design:type', target, propertyKey).name;
-            console.error("JsonStruct signature has changed, use(copy it) \"JsonStruct(" + targetClassName + (TargetClass ? ", '" + TargetClass + "'" : '') + ")\"");
-        }
-        var proto = isDeprecatedUsage ? Reflect.getMetadata('design:type', target, propertyKey) : TargetClass;
-        var name = isDeprecatedUsage ? TargetClass : rawName;
+        var proto = TargetClass;
         var deserializeFunc = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
-        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, name).deserializer(deserializeFunc).struct().raw;
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
         core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
