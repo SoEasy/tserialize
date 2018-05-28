@@ -36,6 +36,11 @@ export function serialize(model: { [key: string]: any }): object {
     const targetClass = Object.getPrototypeOf(model);
 
     const metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
+    // Всякое бывает, мб кто-то сериализует объект без декораторов
+    if (!metaStore) {
+        return {};
+    }
+
     const modelKeys = metaStore.propertyKeys;
     for (const propertyKey of modelKeys) {
         const metadata = metaStore.getMetadataByPropertyKey(propertyKey);
