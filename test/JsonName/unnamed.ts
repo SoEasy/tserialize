@@ -1,5 +1,4 @@
 import { JsonName, serialize, deserialize } from './../../src';
-import 'reflect-metadata';
 
 class BaseUnnamedCase {
     @JsonName()

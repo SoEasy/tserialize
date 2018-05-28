@@ -6,7 +6,7 @@ export class PropertyMetaBuilder {
         rawKey: null
     };
 
-    static make(propertyKey: string, name: string): PropertyMetaBuilder {
+    static make(propertyKey: string, name?: string): PropertyMetaBuilder {
         const retVal = new PropertyMetaBuilder();
         retVal.data.propertyKey = propertyKey;
         retVal.data.rawKey = name || propertyKey;

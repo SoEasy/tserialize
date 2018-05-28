@@ -1,5 +1,4 @@
 import { JsonArray, JsonName, deserialize, serialize } from './../../src/index';
-import 'reflect-metadata';
 
 class PartialClass {
     @JsonName()

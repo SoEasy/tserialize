@@ -1,5 +1,4 @@
 import { JsonName, serialize } from '../../src/index';
-import 'reflect-metadata';
 
 class Base {
     static calledNumber: number = 0;

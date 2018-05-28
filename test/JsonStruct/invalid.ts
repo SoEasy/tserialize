@@ -1,5 +1,4 @@
 import { JsonName, JsonStruct, serialize } from './../../src';
-import 'reflect-metadata';
 
 class InnerClass {
     @JsonName()
@@ -10,16 +9,16 @@ class InnerClass {
 }
 
 class BaseStructCase {
-    @JsonStruct()
+    @JsonStruct(InnerClass)
     inner: InnerClass;
 
-    @JsonStruct('customInner')
+    @JsonStruct(InnerClass, 'customInner')
     inner2: InnerClass;
 
-    @JsonStruct()
+    @JsonStruct(InnerClass)
     inner3: InnerClass;
 
-    @JsonStruct()
+    @JsonStruct(InnerClass)
     inner4: InnerClass = null;
 }
 

@@ -10,23 +10,13 @@ import { deserialize } from './../deserialize';
  * @returns {(target: object, propertyKey: string) => void} - декоратор
  * @constructor
  */
-export function JsonStruct(TargetClass?: any, rawName?: string): (target: object, propertyKey: string) => void {
+export function JsonStruct(TargetClass: any, rawName?: string): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {
-        const isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
-
-        if (isDeprecatedUsage) {
-            const targetClassName = (Reflect as any).getMetadata('design:type', target, propertyKey).name;
-            console.error(
-                `JsonStruct signature has changed, use(copy it) "JsonStruct(${targetClassName}${TargetClass ? `, '${TargetClass}'` : ''})"`
-            );
-        }
-
-        const proto = isDeprecatedUsage ? (Reflect as any).getMetadata('design:type', target, propertyKey) : TargetClass;
-        const name = isDeprecatedUsage ? TargetClass : rawName;
+        const proto = TargetClass;
 
         const deserializeFunc = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
 
-        const propertyMetadata = PropertyMetaBuilder.make(propertyKey, name).deserializer(deserializeFunc).struct().raw;
+        const propertyMetadata = PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
         RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
