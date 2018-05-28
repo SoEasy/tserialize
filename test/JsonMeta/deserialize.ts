@@ -1,5 +1,4 @@
 import { JsonName, JsonMeta, deserialize } from './../../src';
-import 'reflect-metadata';
 
 class InnerClass {
     @JsonName()
@@ -16,7 +15,7 @@ class InnerClass {
 }
 
 class BaseMetaCase {
-    @JsonMeta()
+    @JsonMeta(InnerClass)
     inner: InnerClass = new InnerClass();
 }
 

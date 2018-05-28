@@ -1,5 +1,4 @@
 import { JsonName, serialize } from './../../src';
-import 'reflect-metadata';
 
 class SerializerWithInstanceCase {
     @JsonName('fieldToSerialize', (value, instance) => `${value}${instance.ignoredField}`)

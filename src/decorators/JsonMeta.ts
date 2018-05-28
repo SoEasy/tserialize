@@ -6,18 +6,9 @@ import { deserialize } from '../deserialize';
  * @returns {(target: object, propertyKey: string) => void} - декоратор
  * @constructor
  */
-export function JsonMeta(TargetClass?: any): (target: object, propertyKey: string) => void {
+export function JsonMeta(TargetClass: any): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {
-        const isDeprecatedUsage = !TargetClass || typeof TargetClass === 'string';
-
-        if (isDeprecatedUsage) {
-            const targetClassName = (Reflect as any).getMetadata('design:type', target, propertyKey).name;
-            console.error(
-                `JsonMeta signature has changed, use(copy it) "JsonMeta(${targetClassName})"`
-            );
-        }
-
-        const proto = isDeprecatedUsage ? (Reflect as any).getMetadata('design:type', target, propertyKey) : TargetClass;
+        const proto = TargetClass;
 
         const deserializeFunc = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
 

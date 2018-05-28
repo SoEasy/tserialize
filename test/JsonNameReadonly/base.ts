@@ -1,5 +1,4 @@
 import { JsonNameReadonly, deserialize, serialize } from './../../src';
-import 'reflect-metadata';
 
 class BaseReadonlyCase {
     @JsonNameReadonly()

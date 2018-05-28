@@ -1,5 +1,4 @@
 import { JsonName, serialize } from './../../src';
-import 'reflect-metadata';
 
 class BaseSerializerCase {
     @JsonName('fieldToSerialize', value => `${value}!`)
