@@ -22,6 +22,9 @@ export class RootMetaStore {
         }
 
         const parentStore = this.store.get(getParentClass(targetClass));
+        if (!parentStore) {
+            return;
+        }
         const targetStore = this.store.get(targetClass);
         targetStore.updateWithParentStore(parentStore);
     }

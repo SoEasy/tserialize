@@ -1,6 +1,6 @@
 {
   "name": "tserialize",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "TypeScript serialize utils",
   "types": "index.d.ts",
   "typescript": {
@@ -34,6 +34,7 @@
   "devDependencies": {
     "dts-bundle": "0.7.2",
     "jest": "22.4.3",
+    "jest-environment-node-debug": "^2.0.0",
     "nyc": "11.2.1",
     "ts-loader": "2.3.2",
     "ts-node": "3.3.0",

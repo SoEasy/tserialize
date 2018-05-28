@@ -173,6 +173,10 @@ function serialize(model) {
     var result = {};
     var targetClass = Object.getPrototypeOf(model);
     var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
+    // Всякое бывает, мб кто-то сериализует объект без декораторов
+    if (!metaStore) {
+        return {};
+    }
     var modelKeys = metaStore.propertyKeys;
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
         var propertyKey = modelKeys_1[_i];
@@ -400,6 +404,9 @@ var RootMetaStore = /** @class */ (function () {
             return;
         }
         var parentStore = this.store.get(utils_1.getParentClass(targetClass));
+        if (!parentStore) {
+            return;
+        }
         var targetStore = this.store.get(targetClass);
         targetStore.updateWithParentStore(parentStore);
     };
