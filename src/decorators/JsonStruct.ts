@@ -13,11 +13,10 @@ import { deserialize } from './../deserialize';
 export function JsonStruct(TargetClass: any, rawName?: string): (target: object, propertyKey: string) => void {
     return (target: object, propertyKey: string): void => {
         const proto = TargetClass;
-        const name = rawName;
 
         const deserializeFunc = proto.fromServer ? proto.fromServer : (value): any => deserialize(value, proto);
 
-        const propertyMetadata = PropertyMetaBuilder.make(propertyKey, name).deserializer(deserializeFunc).struct().raw;
+        const propertyMetadata = PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
         RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
