@@ -1,14 +1,19 @@
 import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
 
+export interface DeserializeConfig {
+    makeInstance: boolean;
+}
+
 /**
  * Хэлпер для десериализации сырых данных в экземпляр данного класса
  * @param data - сырые данные
  * @param {{new(...args: any[]): T}} cls - конструктор класса, в экземпляр которого надо превратить данные
  * @returns {T} - экземпляр
  */
-export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }): T {
-    const retVal = new cls();
-    const targetClass = Object.getPrototypeOf(retVal);
+export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }, config: DeserializeConfig = { makeInstance: true }): T {
+    const { makeInstance } = config;
+    const retVal = makeInstance ? new cls() : {};
+    const targetClass = cls.prototype;
     const metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
     const lateFields: Array<string> = [];
 
@@ -42,5 +47,5 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T })
         }
     }
 
-    return retVal;
+    return retVal as T;
 }
