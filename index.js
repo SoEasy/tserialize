@@ -575,9 +575,11 @@ var core_1 = __webpack_require__(0);
  * @param {{new(...args: any[]): T}} cls - конструктор класса, в экземпляр которого надо превратить данные
  * @returns {T} - экземпляр
  */
-function deserialize(data, cls) {
-    var retVal = new cls();
-    var targetClass = Object.getPrototypeOf(retVal);
+function deserialize(data, cls, config) {
+    if (config === void 0) { config = { makeInstance: true }; }
+    var makeInstance = config.makeInstance;
+    var retVal = makeInstance ? new cls() : {};
+    var targetClass = cls.prototype;
     var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
     var lateFields = [];
     var modelKeys = metaStore.propertyKeys;

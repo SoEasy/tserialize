@@ -71,6 +71,9 @@ export function JsonStruct(TargetClass: any, rawName?: string): (target: object,
   */
 export function JsonNameLate<T>(name?: string, serialize?: (value: T, instance: any) => any, deserialize?: (rawValue: any, rawData?: any) => T): (target: object, propertyKey: string) => void;
 
+export interface DeserializeConfig {
+    makeInstance: boolean;
+}
 /**
   * Хэлпер для десериализации сырых данных в экземпляр данного класса
   * @param data - сырые данные
@@ -79,5 +82,5 @@ export function JsonNameLate<T>(name?: string, serialize?: (value: T, instance: 
   */
 export function deserialize<T>(data: any, cls: {
     new (...args: Array<any>): T;
-}): T;
+}, config?: DeserializeConfig): T;
 
