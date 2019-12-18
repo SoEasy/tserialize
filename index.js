@@ -553,7 +553,10 @@ var deserialize_1 = __webpack_require__(1);
 function JsonStruct(TargetClass, rawName) {
     return function (target, propertyKey) {
         var proto = TargetClass;
-        var deserializeFunc = proto.fromServer ? proto.fromServer : function (value) { return deserialize_1.deserialize(value, proto); };
+        var deserializeFunc = proto.fromServer
+            // tslint:disable-next-line
+            ? function (value) { return proto.fromServer(value); }
+            : function (value) { return deserialize_1.deserialize(value, proto); };
         var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
         core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
