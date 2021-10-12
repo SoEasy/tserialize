@@ -17,7 +17,7 @@ export function JsonStruct(TargetClass: any, rawName?: string): (target: object,
         const deserializeFunc = proto.fromServer
             // tslint:disable-next-line
             ? function(value) { return proto.fromServer(value); }
-            : (value): any => deserialize(value, proto);
+            : (value): any => value !== null ? deserialize(value, proto) : null;
 
         const propertyMetadata = PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
         RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
