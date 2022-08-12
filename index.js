@@ -140,7 +140,6 @@ exports.JsonName = JsonName;
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = __webpack_require__(0);
 function serializeValue(metadata, value, instance) {
-    console.log('METADATA', metadata);
     if (!metadata) {
         return;
     }

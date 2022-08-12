@@ -1,7 +1,6 @@
 import { ClassMetaStore, ParentKey, PropertyMetadata, RootMetaStore } from './../core';
 
 function serializeValue(metadata: PropertyMetadata, value: any, instance: any): any {
-    console.log('METADATA', metadata);
     if (!metadata) {
         return;
     }
