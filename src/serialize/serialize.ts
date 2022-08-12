@@ -1,6 +1,7 @@
 import { ClassMetaStore, ParentKey, PropertyMetadata, RootMetaStore } from './../core';
 
 function serializeValue(metadata: PropertyMetadata, value: any, instance: any): any {
+    console.log('METADATA', metadata);
     if (!metadata) {
         return;
     }
@@ -35,10 +36,20 @@ export function serialize(model: { [key: string]: any }): object {
     const result = {};
     const targetClass = Object.getPrototypeOf(model);
 
-    const metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
+    let metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
     // Всякое бывает, мб кто-то сериализует объект без декораторов
     if (!metaStore) {
-        return {};
+        const possibleParent = Object.getPrototypeOf(targetClass);
+
+        if (possibleParent && possibleParent.constructor.name !== 'Object') {
+            // TODO make while loop until reach Object prototype or exists metaStore
+            metaStore = RootMetaStore.getClassMetaStore(possibleParent);
+            if (!metaStore) {
+                return {};
+            }
+        } else {
+            return {};
+        }
     }
 
     const modelKeys = metaStore.propertyKeys;

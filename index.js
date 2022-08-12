@@ -140,6 +140,7 @@ exports.JsonName = JsonName;
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = __webpack_require__(0);
 function serializeValue(metadata, value, instance) {
+    console.log('METADATA', metadata);
     if (!metadata) {
         return;
     }
@@ -175,7 +176,17 @@ function serialize(model) {
     var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
     // Всякое бывает, мб кто-то сериализует объект без декораторов
     if (!metaStore) {
-        return {};
+        var possibleParent = Object.getPrototypeOf(targetClass);
+        if (possibleParent && possibleParent.constructor.name !== 'Object') {
+            // TODO make while loop until reach Object prototype or exists metaStore
+            metaStore = core_1.RootMetaStore.getClassMetaStore(possibleParent);
+            if (!metaStore) {
+                return {};
+            }
+        }
+        else {
+            return {};
+        }
     }
     var modelKeys = metaStore.propertyKeys;
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
@@ -556,7 +567,7 @@ function JsonStruct(TargetClass, rawName) {
         var deserializeFunc = proto.fromServer
             // tslint:disable-next-line
             ? function (value) { return proto.fromServer(value); }
-            : function (value) { return deserialize_1.deserialize(value, proto); };
+            : function (value) { return value !== null ? deserialize_1.deserialize(value, proto) : null; };
         var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
         core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
@@ -585,6 +596,13 @@ function deserialize(data, cls, config) {
     var targetClass = cls.prototype;
     var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
     var lateFields = [];
+    if (!metaStore) {
+        var possibleParent = Object.getPrototypeOf(targetClass);
+        if (possibleParent && possibleParent.constructor.name !== 'Object') {
+            // TODO make while loop until reach Object prototype or exists metaStore
+            metaStore = core_1.RootMetaStore.getClassMetaStore(possibleParent);
+        }
+    }
     var modelKeys = metaStore.propertyKeys;
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
         var propertyKey = modelKeys_1[_i];

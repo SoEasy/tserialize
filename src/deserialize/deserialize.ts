@@ -14,8 +14,16 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T },
     const { makeInstance } = config;
     const retVal = makeInstance ? new cls() : {};
     const targetClass = cls.prototype;
-    const metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
+    let metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
     const lateFields: Array<string> = [];
+
+    if (!metaStore) {
+        const possibleParent = Object.getPrototypeOf(targetClass);
+        if (possibleParent && possibleParent.constructor.name !== 'Object') {
+            // TODO make while loop until reach Object prototype or exists metaStore
+            metaStore = RootMetaStore.getClassMetaStore(possibleParent);
+        }
+    }
 
     const modelKeys = metaStore.propertyKeys;
     for (const propertyKey of modelKeys) {
