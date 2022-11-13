@@ -1,26 +1,25 @@
-# Утилиты сериализации/десериализации для TypeScript и ES6
+# Serialization/deserialization utilities for TypeScript and ES6
 [![Build Status](https://travis-ci.org/SoEasy/tserialize.svg?branch=master)](https://travis-ci.org/SoEasy/tserialize)
 <img src="img/logo.svg" width="300" align="center">
 <br/>
 
-## Установка
+## Installation
 >npm install --save tserialize
 
-Установка с гитхаба
+Installation from github
 >npm install https://github.com/SoEasy/tserialize/tarball/master
 
 ### Change overview
-Версия поднялась до 1.4.0
-- Переписано внутреннее хранилище метаданных
-- Bсправлены баги при наследовании моделей
-- Начался процесс отказа от reflect-metadata
+Up version to 1.4.0
+- Reimplemented internal store of metadata
+- Fixed bugs when inheriting the models
+- Started the process of moving from reflect-metadata
 
-## Основная информация
-Библиотека для борьбы с бэкэндом и любыми другими источниками данных, которые не желают(или не могут) называть поля в объектах так, как нам удобно.
+## Overview
+This library servers as a convenient way for handling backend sources models with inappropriate formats. Also it is a great solution for transforming raw data in a required classes instances.
 
-Второе назначение - использования принципа инкапсуляции над сырыми данными - удобно превращать сырые данные в экземпляр нужного класса и работать с ним.
+Lets do a quick example for backend source model:
 
-Например есть источник данных:
 ```
 data = {
     field_one: 1,
@@ -28,9 +27,7 @@ data = {
     ...
     field_ten: 10
 }
-```
-И класс
-```
+
 class ProgressionClass {
     fieldOne: number;
     fieldTwo: number;
@@ -46,15 +43,16 @@ class ProgressionClass {
         return this.fieldNine + this.fieldTen;
     }
 }
+
 ```
-Задача - инициализировать экземпляр класса `ProgressionClass` с данными `data`. Несколько возможных вариантов:
-- Передать их аргументами в конструктор
-- Создать фабричный метод, который будет принимать данные и создавать из них экземпляр
-- Создать метод, который применяет к экземпляру переданные данные
+We need to initialize the instance of `ProgressionClass` with `data` from backend source. A few ways are possible:
+- Pass fields as arguments in to constructor
+- Create a fabric method for handling passing data and create instances from it
+- Create a method which applies passing data to the instance
 
-Каждый из этих способов треубует написания императивного кода.
+Each of this options requires cost imperative way of handling data
 
-Библиотека предлагает декларативный стиль для описания преобразований данных и функции для работы с ними.
+Library allows to use declarative way for describing how to manage incoming data.
 ```
 import { deserialize, JsonName } from 'teserialize';
 
@@ -87,38 +85,38 @@ console.log(progressionInstance.fieldTwo); // 2
 ```
 
 ## API
-- Функции
- - [Десериализация сырых данных](#deserialize)
- - [Сериализация экземпляра](#serialize)
-- Декораторы
- - [Базовый декоратор JsonName](#jsonname)
- - [Декоратор для чтения JsonNameReadonly](#jsonnamereadonly)
- - [Декоратор для вложенных классов JsonStruct](#jsonstruct)
- - [Декоратор для метаданных JsonMeta](#jsonmeta)
- - [Декоратор для массивов JsonArray](#jsonarray)
+- Functions
+ - [Deserialization of raw data](#deserialize)
+ - [Serialization of instance](#serialize)
+- Decorators
+ - [Basic decorator JsonName](#jsonname)
+ - [Decorator for reading JsonNameReadonly](#jsonnamereadonly)
+ - [Decorator for nested classes JsonStruct](#jsonstruct)
+ - [Decorator for metadata JsonMeta](#jsonmeta)
+ - [Decorator for arrays JsonArray](#jsonarray)
 
 ### deserialize
-Функция из пакета `tserialize`, нужна для превращения сырых данных в экземпляр класса
+Function from `tserialize`, uses for transforming raw data in to instance of a class
 
-##### Импорт
+##### Import
 ```
 import { deserialize } from 'tserialize';
 ```
 
-##### Сигнатура
+##### Signature
 ```
 function deserialize<T>(rawData: any, TargetClass: { new (...args: Array<any>): T }): T
 ```
 
-##### Пример использования
+##### Example
 ```
 class Foo {}
 
 const fooInstance = deserialize<Foo>(rawData, Foo);
 ```
 
-##### Рекомендации
-Рекомендуется вызов функции `deserialize` оборачивать в static-метод вашего класса и называть его `fromServer`.
+##### Recommendations
+The recommended way of using `deserialize` is by calling it within `static fromServer`.
 ```
 class Foo {
     static fromServer(data: object): Foo {
@@ -126,25 +124,24 @@ class Foo {
     }
 }
 ```
-- Во-первых, это красиво - "Эй, класс, дай мне свой экземпляр на основе этих данных"
-- Во-вторых, это зарезервированное имя static-метода и библиотека будет пытаться его использовать при работе с декораторами [JsonStruct](#jsonstruct) и [JsonMeta](#jsonmeta).
-- В третьих, в метод `fromServer` можно поместить еще какую-нибудь логику инициализации.
+- It is a internal *static method* using by the library when it works with [JsonStruct](#jsonstruct) and [JsonMeta](#jsonmeta).
+- Also using of `fromServer` allows to put some logic when you requesting for the instance of a class
 
 
 ### serialize
-Функция из пакета для превращения экземпляра класса в сырые данные, например для передачи на сервер.
+Function from the `teserialize` allows to transform instance of a class in to raw data. Useful when you need to pass the data in to server.
 
-##### Импорт
+##### Import
 ```
 import { serialize } from 'teserialize';
 ```
 
-##### Сигнатура
+##### Signature
 ```
 function serialize(model: { [key: string]: any }): object
 ```
 
-##### Пример использования
+##### Example
 ```
 class Foo {}
 
@@ -152,8 +149,8 @@ const fooInstance = new Foo();
 const dataToServer = serialize(fooInstance);
 ```
 
-##### Рекомендации
-Рекомендуется вызов функции `serialize` оборачивать в метод вашего класса и называть его `toServer`.
+##### Recommendations
+The recommended way of using `serialize` is by calling it within `toServer`.
 ```
 class Foo {
     toServer(): object {
@@ -161,16 +158,14 @@ class Foo {
     }
 }
 ```
-- Во-первых, это красиво - "Эй, экземпляр, превратись в вид для отправки на сервер"
-- Во-вторых, это зарезервированное имя и библиотека будет пытаться его использовать с декораторами [JsonStruct](#jsonstruct) и [JsonMeta](#jsonmeta).
-- В третьих, в метод `toServer` можно поместить еще какую-нибудь логику для обработки данных.
+- It is a internal *static method* using by the library when it works with [JsonStruct](#jsonstruct) and [JsonMeta](#jsonmeta).
+- Also using of `fromServer` allows to put some logic when you requesting for the instance of a class
 
 
 ### JsonName
-Помечает поле как подлежащее сериализации.
-Самый базовый декоратор библиотеки. Все остальные реализованы с его помощью.
+It indicates the field like required for serialization. The most basic decorator in library. Other decorators use it.
 
-##### Сигнатура
+##### Signature
 ```
 JsonName<T>(
             name?: string,
@@ -178,11 +173,11 @@ JsonName<T>(
             deserialize?: (serverObj: any) => T)
         )
 ```
-- name - название ключа, под которым в чистых данных лежит нужное значение. Если отсутствует - будет использовано название поля.
-- serialize - функция, преобразующая значение поля при работе [serialize](#serialize). Если значение поля `null/undefined`, или функция-сериализатор вернет `null/undefined` - поле не попадет в сериализованный объект
-- deserialize - функция, "очищающая" входные данные, работает при [deserialize](#desrialize)
+- name - name of a key in a raw data. If skip then the name of a field is using.
+- serialize - function for transforming the data [serialize](#serialize). If the value of a field is `null/undefined` then function serializator returns `null/undefined` - and the field will not be included in to final model.
+- deserialize - function for clearing incoming data [deserialize](#deserialize)
 
-##### Пример
+##### Example
 ```
 class Foo {
     @JsonName()
@@ -195,7 +190,7 @@ class Foo {
     sex: boolean;
 
     @JsonName()
-    alwaysNull: string = null; // Поле не будет изменяться далее и не попадет в результат сериализации
+    alwaysNull: string = null; // field will not be changed and will not go in to final model after serialization
 
     @JsonName('always_null_2', () => null)
     alwaysNull2: string;
@@ -209,42 +204,42 @@ const f = new Foo();
 f.firstName = 'Name';
 f.lastName = 'Last';
 f.sex = true;
-f.alwaysNull2 = 'hello'; // Сериализатор возвращает null, не попадет в результат
+f.alwaysNull2 = 'hello'; // Serializator returns null no result
 const serialized = f.toServer(); // { firstName: 'Name', last_name: 'LAST', sex: 'M' }
 ```
 
 ### JsonNameReadonly
-Подобен JsonName с обнуляющим сериализатором. Используется тогда, когда нужно только получить данные и не нужно сериализовать их для отправки.
+It works like `JsonName` with nullifier serializator. Uses when it needs to return data and don't need to serialize before sending.
 
-*При сериализации поле под этим декоратором никогда не попадет в результат*
-##### Сигнатура
+*When serialization field with this decorator will never go to the result model*
+##### Signature
 ```
 JsonNameReadonly<T>(
             name?: string,
             deserialize?: (serverObj: any) => T)
         )
 ```
-- name - название ключа, под которым в чистых данных лежит нужное значение
-- deserialize - функция, "очищающая" входные данные, работает при [deserialize](#desrialize)
+- name - name of a key in a raw data
+- deserialize - function for clearing incoming data [deserialize](#deserialize)
 
 ### JsonStruct
-Декоратор для сериализации вложенных объектов, в которых так же поля декорированы для сериализации.
+Decorator for serialization of nested objects where fields are decorated for serialization and deserialization as well.
 
-Если во вложенном классе есть метод fromServer - он будет использован для десериализации. Если нет - вызовется обычный deserialize
+If the nested class has a `fromServer` method, it will be used for deserialization. If not, the usual deserialize will be called.
 
-Если во вложенном классе есть метод toServer - он будет использован для сериализации. Если нет - вызовется обычный serialize
+If the nested class has a `toServer` method, it will be used for serialization. If not, normal serialize will be called.
 
-##### Сигнатура
+##### Signature
 ```
 function JsonStruct(
     proto: any
     name?: string
 )
 ```
-- proto - конструктор класса вложенной структуры
-- name - название ключа для данных
+- proto - constructor of a class of nested structure
+- name - name of a key for data
 
-##### Пример
+##### Example
 ```
 class SysInfo {
     @JsonName('operation_system')
@@ -272,17 +267,17 @@ const instance = Computer.fromServer(data);
 ```
 
 ### JsonMeta
-Подобен JsonStruct, но данные берет не из ключа, а из исходного объекта. Нужен для преобразования плоских-композитных моделей.
-Например, объект чистых данных содержит овер9000 ключей, которые по логике относятся к разным сущностям.
-И вы, как хороший разработчик, хотите осуществить декомпозицию на мелкие самостоятельные сущности.
+Similar to `JsonStruct`, but it takes data not from the key but from the raw data. Uses for transforming flatten-composite models.
 
-##### Сигнатура
+For example when the object of a source data consists a lot of keys but each of it relates to the different entity and you want to de-composite for small pieces of independent entity.
+
+##### Signature
 ```
 function JsonMeta(proto: any)
 ```
-- proto - конструктор класса, в который будет выделяться плоская структура
+- proto - constructor of a class for flatten structure
 
-##### Пример
+##### Example
 ```
 class SysInfo {
     @JsonName('operation_system')
@@ -310,16 +305,16 @@ const instance = Computer.fromServer(data);
 ```
 
 ### JsonArray
-Декоратор для сериализации/десериализации массивов сериализуемых экземпляров.
-Использует внутренние реализации toServer/static fromServer если они есть, а если нет - нативные serialize/deserialize
+Decorator for serialize/deserialize arrays of serializing instances
+In canse of implementations of toServer/static fromServer, otherwise native serialize/deserialize
 
-##### Сигнатура
+##### Signature
 ```
 function JsonArray(proto, name)
 ```
-proto - класс, экземпляры которого будут храниться в массиве
+proto - class, instances of will be persisted in array
 
-##### Пример
+##### Example
 ```
 class Person {
     @JsonName('name') personName: string;
