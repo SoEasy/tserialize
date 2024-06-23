@@ -25,6 +25,12 @@ describe('JsonNameReadonly deserialize case', () => {
         expect(serialize(d)).toEqual({});
     });
 
+    test('must serialize filed witn null data to output object ', () => {
+        const d = new DataClass();
+        d.parts = null;
+        expect(serialize(d, { allowNullValues: true })).toEqual({ parts: null });
+    });
+
     test('must serialize empty array', () => {
         const d = new DataClass();
         d.parts = [];
@@ -65,6 +71,31 @@ describe('JsonNameReadonly deserialize case', () => {
             parts: [
                 { fieldOne: 'one', field_two: 'two' },
                 { fieldOne: 'three', field_two: 'four' }
+            ]
+        });
+    });
+
+    test('must serialize instances with null data fields to output object ', () => {
+        const d = new DataClass();
+        d.parts = [];
+        const instanceWithNullFields = new PartialClass('one', null);
+        d.parts.push(new PartialClass('one', 'two'), instanceWithNullFields);
+        expect(serialize(d, { allowNullValues: true })).toEqual({ parts: [{ fieldOne: 'one', field_two: 'two' }, { fieldOne: 'one', field_two: null }] });
+    });
+
+    test('must serialize array with raw data with auto create instances', () => {
+        const d = new DataClass();
+        const p1 = new PartialClass('one', 'two');
+        const p2 = new PartialClass('three', 'four');
+        d.parts = [];
+        d.parts.push(p1);
+        d.parts.push(p2);
+        d.parts.push({ fieldOne: 'filedOne', fieldTwo: null })
+        expect(serialize(d, { allowNullValues: true, autoCreateModelForRawData: true })).toEqual({
+            parts: [
+                { fieldOne: 'one', field_two: 'two' },
+                { fieldOne: 'three', field_two: 'four' },
+                { fieldOne: 'filedOne', field_two: null }
             ]
         });
     });

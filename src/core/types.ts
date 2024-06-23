@@ -1,4 +1,6 @@
-export type TSerializeFunc<T> = (value: T, instance: any) => any;
+export type TSerializeFunc<T> = (value: T, instance: any, config: TSerializeConfig) => any;
+export type TSerializeConfig = { allowNullValues: boolean };
+
 export type TDeserializeFunc<T> = (rawValue: any, rawData?: any) => T;
 
 export interface PropertyMetadata {
