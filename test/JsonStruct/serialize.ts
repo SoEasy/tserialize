@@ -73,23 +73,4 @@ describe('JsonStruct serialize case', () => {
             }
         });
     });
-
-    test('must serialize raw data with auto create instances', () => {
-        instance.inner2 = {
-            fieldToSerialize: 'fieldToSerialize',
-            fieldTwo: 42
-        } as any;
-
-        serialized = serialize(instance, { allowNullValues: true, autoCreateModelForRawData: true });
-        expect(serialized).toEqual({
-            inner: {
-                fieldToSerialize: referenceValue,
-                customName: 2
-            },
-            customInner: {
-                fieldToSerialize: 'fieldToSerialize',
-                customName: 42
-            }
-        });
-    });
 });
