@@ -1,5 +1,7 @@
+import { TSerializeConfig } from 'core/types';
 import { PropertyMetaBuilder, RootMetaStore } from './../core';
 import { deserialize } from './../deserialize';
+import { serialize } from './../serialize';
 
 /**
  * Декоратор для сериализаци-дерериализации аггрегированных моделей.

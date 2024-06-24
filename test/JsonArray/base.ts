@@ -43,6 +43,28 @@ describe('JsonNameReadonly deserialize case', () => {
         expect(serialize(d)).toEqual({});
     });
 
+    test('must serialize array with raw data with auto create instances', () => {
+        const d = new DataClass();
+        const p1 = new PartialClass('one', 'two');
+        const p2 = new PartialClass('three', 'four');
+        d.parts = [];
+        d.parts.push(p1);
+        d.parts.push(p2);
+        d.parts.push({ fieldOne: 'filedOne', fieldTwo: null })
+        expect(serialize(d, { allowNullValues: true, autoCreateModelForRawData: true })).toEqual({
+            parts: [
+                { fieldOne: 'one', field_two: 'two' },
+                { fieldOne: 'three', field_two: 'four' },
+                { fieldOne: 'filedOne', field_two: null }
+            ]
+        });
+    });
+
+    test('must deserialize undefined data', () => {
+        const data = {};
+        expect(deserialize(data, DataClass).parts).toBeUndefined();
+    });
+
     test('must serialize array with invalid instances', () => {
         const d = new DataClass();
         const p1 = new PartialClass('one', 'two');

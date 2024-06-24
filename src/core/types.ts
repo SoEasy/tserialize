@@ -1,5 +1,5 @@
 export type TSerializeFunc<T> = (value: T, instance: any, config: TSerializeConfig) => any;
-export type TSerializeConfig = { allowNullValues: boolean };
+export type TSerializeConfig = { allowNullValues?: boolean; autoCreateModelForRawData?: boolean; };
 
 export type TDeserializeFunc<T> = (rawValue: any, rawData?: any) => T;
 
