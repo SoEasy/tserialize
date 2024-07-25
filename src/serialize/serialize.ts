@@ -1,21 +1,27 @@
+import { TSerializeConfig } from './../core/types';
 import { ClassMetaStore, ParentKey, PropertyMetadata, RootMetaStore } from './../core';
 
-function serializeValue(metadata: PropertyMetadata, value: any, instance: any): any {
+function serializeValue(metadata: PropertyMetadata, value: any, instance: any, config: TSerializeConfig): any {
     if (!metadata) {
         return;
     }
 
     if (metadata.isStruct) {
-        const serializer = value ? value.toServer : null;
-        return serializer ? serializer.call(value) : (value ? serialize(value) : null);
+        const serializer = metadata.serialize;
+        if (serializer) {
+            return serializer(value, instance, config)
+        }
+
+        return value ? serialize(value, config) : null;
     } else {
         const serializer = metadata.serialize;
-        return serializer ? serializer(value, instance) : value;
+        return serializer ? serializer(value, instance, config) : value;
     }
 }
 
-function assignSerializedValueToResult(metadata: PropertyMetadata, serializedValue: any, result: any): void {
-    if (![null, undefined].includes(serializedValue)) {
+function assignSerializedValueToResult(metadata: PropertyMetadata, serializedValue: any, result: any, config: TSerializeConfig): void {
+    const nonSerializableValues = config.allowNullValues ? [undefined] : [undefined, null];
+    if (!nonSerializableValues.includes(serializedValue)) {
         const jsonName = metadata.rawKey;
         if (jsonName !== ParentKey) {
             result[jsonName] = serializedValue;
@@ -31,7 +37,7 @@ function assignSerializedValueToResult(metadata: PropertyMetadata, serializedVal
  * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
  * @returns {{}} - обычный объект JS
  */
-export function serialize(model: { [key: string]: any }): object {
+export function serialize(model: { [key: string]: any }, config: TSerializeConfig = { allowNullValues: false, autoCreateModelForRawData: false }): object {
     const result = {};
     const targetClass = Object.getPrototypeOf(model);
 
@@ -54,8 +60,8 @@ export function serialize(model: { [key: string]: any }): object {
     const modelKeys = metaStore.propertyKeys;
     for (const propertyKey of modelKeys) {
         const metadata = metaStore.getMetadataByPropertyKey(propertyKey);
-        const serializedValue = serializeValue(metadata, model[propertyKey], model);
-        assignSerializedValueToResult(metadata, serializedValue, result);
+        const serializedValue = serializeValue(metadata, model[propertyKey], model, config);
+        assignSerializedValueToResult(metadata, serializedValue, result, config);
     }
     return result;
 }
