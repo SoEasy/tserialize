@@ -1,6 +1,6 @@
 import { JsonName, serialize } from './../../src';
 
-class NullCase {
+class VoidCase {
     @JsonName()
     firstField: string;
 
@@ -11,8 +11,8 @@ class NullCase {
     thirdField: boolean = true;
 }
 
-describe('Null case serialization', () => {
-    const instance = new NullCase();
+describe('Void case serialization', () => {
+    const instance = new VoidCase();
     const serialized = serialize(instance);
 
     test('dont have properties', () => {
