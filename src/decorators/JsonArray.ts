@@ -11,7 +11,7 @@ import { TSerializeConfig } from 'core/types';
  * @constructor
  */
 export function JsonArray(proto: any, name?: string): (target: object, propertyKey: string) => void {
-    const serializer = (value: any, instance: any, config?: TSerializeConfig): any => {
+    const serializer = (value: any, _: any, config?: TSerializeConfig): any => {
         if (!value || !(value instanceof Array)) {
             return null;
         }

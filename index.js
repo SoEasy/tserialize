@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
+/******/ 	return __webpack_require__(__webpack_require__.s = 17);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -83,13 +83,13 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var root_store_1 = __webpack_require__(9);
+var root_store_1 = __webpack_require__(10);
 exports.RootMetaStore = root_store_1.RootMetaStore;
-var consts_1 = __webpack_require__(7);
+var consts_1 = __webpack_require__(8);
 exports.ParentKey = consts_1.ParentKey;
 var class_meta_store_1 = __webpack_require__(4);
 exports.ClassMetaStore = class_meta_store_1.ClassMetaStore;
-var property_meta_builder_1 = __webpack_require__(8);
+var property_meta_builder_1 = __webpack_require__(9);
 exports.PropertyMetaBuilder = property_meta_builder_1.PropertyMetaBuilder;
 
 
@@ -100,7 +100,7 @@ exports.PropertyMetaBuilder = property_meta_builder_1.PropertyMetaBuilder;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var deserialize_1 = __webpack_require__(15);
+var deserialize_1 = __webpack_require__(16);
 exports.deserialize = deserialize_1.deserialize;
 
 
@@ -139,21 +139,25 @@ exports.JsonName = JsonName;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = __webpack_require__(0);
-function serializeValue(metadata, value, instance) {
+function serializeValue(metadata, value, instance, config) {
     if (!metadata) {
         return;
     }
     if (metadata.isStruct) {
-        var serializer = value ? value.toServer : null;
-        return serializer ? serializer.call(value) : (value ? serialize(value) : null);
+        var serializer = metadata.serialize;
+        if (serializer) {
+            return serializer(value, instance, config);
+        }
+        return value ? serialize(value, config) : null;
     }
     else {
         var serializer = metadata.serialize;
-        return serializer ? serializer(value, instance) : value;
+        return serializer ? serializer(value, instance, config) : value;
     }
 }
-function assignSerializedValueToResult(metadata, serializedValue, result) {
-    if (![null, undefined].includes(serializedValue)) {
+function assignSerializedValueToResult(metadata, serializedValue, result, config) {
+    var nonSerializableValues = config.allowNullValues ? [undefined] : [undefined, null];
+    if (!nonSerializableValues.includes(serializedValue)) {
         var jsonName = metadata.rawKey;
         if (jsonName !== core_1.ParentKey) {
             result[jsonName] = serializedValue;
@@ -169,7 +173,8 @@ function assignSerializedValueToResult(metadata, serializedValue, result) {
  * @param model - экземпляр класса, который надо превратить в данные для отправки серверу по JSONRPC
  * @returns {{}} - обычный объект JS
  */
-function serialize(model) {
+function serialize(model, config) {
+    if (config === void 0) { config = { allowNullValues: false, autoCreateModelForRawData: false }; }
     var result = {};
     var targetClass = Object.getPrototypeOf(model);
     var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
@@ -191,8 +196,8 @@ function serialize(model) {
     for (var _i = 0, modelKeys_1 = modelKeys; _i < modelKeys_1.length; _i++) {
         var propertyKey = modelKeys_1[_i];
         var metadata = metaStore.getMetadataByPropertyKey(propertyKey);
-        var serializedValue = serializeValue(metadata, model[propertyKey], model);
-        assignSerializedValueToResult(metadata, serializedValue, result);
+        var serializedValue = serializeValue(metadata, model[propertyKey], model, config);
+        assignSerializedValueToResult(metadata, serializedValue, result, config);
     }
     return result;
 }
@@ -310,18 +315,8 @@ exports.clone = clone;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var JsonArray_1 = __webpack_require__(10);
-exports.JsonArray = JsonArray_1.JsonArray;
-var JsonMeta_1 = __webpack_require__(11);
-exports.JsonMeta = JsonMeta_1.JsonMeta;
-var JsonName_1 = __webpack_require__(2);
-exports.JsonName = JsonName_1.JsonName;
-var JsonNameReadonly_1 = __webpack_require__(13);
-exports.JsonNameReadonly = JsonNameReadonly_1.JsonNameReadonly;
-var JsonStruct_1 = __webpack_require__(14);
-exports.JsonStruct = JsonStruct_1.JsonStruct;
-var JsonNameLate_1 = __webpack_require__(12);
-exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
+var serialize_1 = __webpack_require__(3);
+exports.serialize = serialize_1.serialize;
 
 
 /***/ }),
@@ -331,11 +326,32 @@ exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ParentKey = '@JsonNameParentKey';
+var JsonArray_1 = __webpack_require__(11);
+exports.JsonArray = JsonArray_1.JsonArray;
+var JsonMeta_1 = __webpack_require__(12);
+exports.JsonMeta = JsonMeta_1.JsonMeta;
+var JsonName_1 = __webpack_require__(2);
+exports.JsonName = JsonName_1.JsonName;
+var JsonNameReadonly_1 = __webpack_require__(14);
+exports.JsonNameReadonly = JsonNameReadonly_1.JsonNameReadonly;
+var JsonStruct_1 = __webpack_require__(15);
+exports.JsonStruct = JsonStruct_1.JsonStruct;
+var JsonNameLate_1 = __webpack_require__(13);
+exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
 
 
 /***/ }),
 /* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ParentKey = '@JsonNameParentKey';
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -389,7 +405,7 @@ exports.PropertyMetaBuilder = PropertyMetaBuilder;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -430,14 +446,14 @@ exports.RootMetaStore = RootMetaStore;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(2);
-var serialize_1 = __webpack_require__(17);
+var serialize_1 = __webpack_require__(6);
 var deserialize_1 = __webpack_require__(1);
 /**
  * Декоратор для сериализации-десериализации массивов экземпляров.
@@ -447,13 +463,19 @@ var deserialize_1 = __webpack_require__(1);
  * @constructor
  */
 function JsonArray(proto, name) {
-    var serializer = function (value) {
+    var serializer = function (value, _, config) {
         if (!value || !(value instanceof Array)) {
             return null;
         }
         return value.map(function (item) {
-            if (item instanceof proto) {
-                return item.toServer ? item.toServer() : serialize_1.serialize(item);
+            var model = item;
+            if (item && !(item instanceof proto) && config && config.autoCreateModelForRawData && typeof item === 'object') {
+                var itemInstance = new proto();
+                Object.assign(itemInstance, item);
+                model = itemInstance;
+            }
+            if (model instanceof proto) {
+                return model.toServer ? model.toServer(config) : serialize_1.serialize(model, config);
             }
         }).filter(function (i) { return !!i; });
     };
@@ -469,7 +491,7 @@ exports.JsonArray = JsonArray;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -494,7 +516,7 @@ exports.JsonMeta = JsonMeta;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -522,7 +544,7 @@ exports.JsonNameLate = JsonNameLate;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -543,7 +565,7 @@ exports.JsonNameReadonly = JsonNameReadonly;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -551,6 +573,7 @@ exports.JsonNameReadonly = JsonNameReadonly;
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = __webpack_require__(0);
 var deserialize_1 = __webpack_require__(1);
+var serialize_1 = __webpack_require__(6);
 /**
  * Декоратор для сериализаци-дерериализации аггрегированных моделей.
  * Для сериализации использует toServer метод экземпляра.Если его нет - просто serialize.
@@ -559,7 +582,7 @@ var deserialize_1 = __webpack_require__(1);
  * @param {string} rawName - кастомное имя поля в сырых данных
  * @returns {(target: object, propertyKey: string) => void} - декоратор
  * @constructor
- */
+*/
 function JsonStruct(TargetClass, rawName) {
     return function (target, propertyKey) {
         var proto = TargetClass;
@@ -567,7 +590,21 @@ function JsonStruct(TargetClass, rawName) {
             // tslint:disable-next-line
             ? function (value) { return proto.fromServer(value); }
             : function (value) { return value !== null ? deserialize_1.deserialize(value, proto) : null; };
-        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).struct().raw;
+        var serializerFunc = function (value, _, config) {
+            if (!value) {
+                return null;
+            }
+            if (value.toServer) {
+                return value.toServer.call(value, config);
+            }
+            var model = value;
+            if (!(model instanceof proto) && config && config.autoCreateModelForRawData) {
+                model = new proto();
+                Object.assign(model, value);
+            }
+            return serialize_1.serialize(model, config);
+        };
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).serializer(serializerFunc).struct().raw;
         core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
@@ -575,7 +612,7 @@ exports.JsonStruct = JsonStruct;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -638,13 +675,13 @@ exports.deserialize = deserialize;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var decorators_1 = __webpack_require__(6);
+var decorators_1 = __webpack_require__(7);
 exports.JsonArray = decorators_1.JsonArray;
 exports.JsonName = decorators_1.JsonName;
 exports.JsonNameLate = decorators_1.JsonNameLate;
@@ -655,17 +692,6 @@ var serialize_1 = __webpack_require__(3);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(1);
 exports.deserialize = deserialize_1.deserialize;
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var serialize_1 = __webpack_require__(3);
-exports.serialize = serialize_1.serialize;
 
 
 /***/ })
