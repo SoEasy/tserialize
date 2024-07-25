@@ -21,11 +21,7 @@ export function JsonStruct(TargetClass: any, rawName?: string): (target: object,
             ? function (value) { return proto.fromServer(value); }
             : (value): any => value !== null ? deserialize(value, proto) : null;
 
-        const serializerFunc = (value: any, instance: any, config?: TSerializeConfig) => {
-            if (!config.allowNullValues) {
-                debugger;
-            }
-
+        const serializerFunc = (value: any, _: any, config?: TSerializeConfig) => {
             if (!value) {
                 return null;
             }
