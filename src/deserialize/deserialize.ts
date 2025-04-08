@@ -1,4 +1,4 @@
-import { TDeserializeConfig } from 'core/types';
+import { TDeserializeConfig } from './../core/types';
 import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
 
 /**
