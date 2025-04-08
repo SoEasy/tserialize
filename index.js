@@ -479,11 +479,11 @@ function JsonArray(proto, name) {
             }
         }).filter(function (i) { return !!i; });
     };
-    var deserializer = function (value) {
+    var deserializer = function (value, _, config) {
         if (!value || !(value instanceof Array)) {
             return null;
         }
-        return value.map(function (item) { return proto.fromServer ? proto.fromServer(item) : deserialize_1.deserialize(item, proto); });
+        return value.map(function (item) { return proto.fromServer ? proto.fromServer(item) : deserialize_1.deserialize(item, proto, config); });
     };
     return JsonName_1.JsonName.call(null, name, serializer, deserializer);
 }
@@ -589,7 +589,7 @@ function JsonStruct(TargetClass, rawName) {
         var deserializeFunc = proto.fromServer
             // tslint:disable-next-line
             ? function (value) { return proto.fromServer(value); }
-            : function (value) { return value !== null ? deserialize_1.deserialize(value, proto) : null; };
+            : function (value, _, config) { return value !== null ? deserialize_1.deserialize(value, proto, config) : null; };
         var serializerFunc = function (value, _, config) {
             if (!value) {
                 return null;
@@ -652,7 +652,7 @@ function deserialize(data, cls, config) {
             var jsonName = serializeProps.rawKey;
             var jsonValue = jsonName !== core_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue, data) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue, data, config) : jsonValue;
             }
         }
     }
@@ -665,7 +665,7 @@ function deserialize(data, cls, config) {
             var jsonName = serializeProps.rawKey;
             var jsonValue = jsonName !== core_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize_2 ? deserialize_2(jsonValue, retVal) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize_2 ? deserialize_2(jsonValue, retVal, config) : jsonValue;
             }
         }
     }
