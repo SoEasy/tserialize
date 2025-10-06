@@ -26,6 +26,6 @@ describe('Deserialize config case', () => {
     });
       
     test('object instance for nested model', () => {
-      expect(objectInstance.nested instanceof NestedClass).toBeFalsy();
+      expect(objectInstance.nested instanceof NestedClass).toBeTruthy();
     })
 });

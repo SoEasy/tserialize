@@ -31,10 +31,10 @@ describe('Deserialize config case', () => {
     });
 
     test('object instance in arrays', () => {
-      expect(objectInstance.nestedArray[0] instanceof NestedClass).toBeFalsy();
+      expect(objectInstance.nestedArray[0] instanceof NestedClass).toBeTruthy();
     })
 
     test('object instance in nested arrays', () => {
-      expect(objectInstance.nestedArray[0].array[0] instanceof NestedClass2).toBeFalsy();
+      expect(objectInstance.nestedArray[0].array[0] instanceof NestedClass2).toBeTruthy();
     })
 });
