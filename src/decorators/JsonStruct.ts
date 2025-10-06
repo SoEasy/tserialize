@@ -19,7 +19,7 @@ export function JsonStruct(TargetClass: any, rawName?: string): (target: object,
         const deserializeFunc = proto.fromServer
             // tslint:disable-next-line
             ? function (value) { return proto.fromServer(value); }
-            : (value): any => value !== null ? deserialize(value, proto) : null;
+            : (value, _, config): any => value !== null ? deserialize(value, proto, config) : null;
 
         const serializerFunc = (value: any, _: any, config?: TSerializeConfig) => {
             if (!value) {

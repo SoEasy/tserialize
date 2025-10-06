@@ -1,1 +1,1 @@
-export { DeserializeConfig, deserialize } from './deserialize';
+export { deserialize } from './deserialize';

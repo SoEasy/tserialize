@@ -1,7 +1,7 @@
 import { JsonName } from './JsonName';
 import { serialize } from './../serialize';
 import { deserialize } from './../deserialize';
-import { TSerializeConfig } from 'core/types';
+import { TDeserializeFunc, TSerializeConfig } from 'core/types';
 
 /**
  * Декоратор для сериализации-десериализации массивов экземпляров.
@@ -31,12 +31,12 @@ export function JsonArray(proto: any, name?: string): (target: object, propertyK
         ).filter(i => !!i);
     };
 
-    const deserializer = (value): any => {
+    const deserializer: TDeserializeFunc<any> = (value, _, config): any => {
         if (!value || !(value instanceof Array)) {
             return null;
         }
         return value.map(
-            item => proto.fromServer ? proto.fromServer(item) : deserialize(item, proto)
+            item => proto.fromServer ? proto.fromServer(item) : deserialize(item, proto, config)
         );
     };
 

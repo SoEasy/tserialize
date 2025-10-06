@@ -20,6 +20,10 @@ describe('Deserialize config case', () => {
     const data = { nestedArray: [{ nestedField: referenceValue, array: [{ nestedField: referenceValue }] }] };
     const classInstance = deserialize(data, DeserializerWithoutInstance);
     const objectInstance = deserialize(data, DeserializerWithoutInstance, { makeInstance: false });
+    const objectWithoutChildInstances = deserialize(data, DeserializerWithoutInstance, {
+        makeInstance: false,
+        makeChildInstance: false
+    });
 
     test('class instance instanceof class', () => {
       expect(classInstance instanceof DeserializerWithoutInstance).toBeTruthy();
@@ -32,9 +36,23 @@ describe('Deserialize config case', () => {
 
     test('object instance in arrays', () => {
       expect(objectInstance.nestedArray[0] instanceof NestedClass).toBeTruthy();
-    })
+    });
 
     test('object instance in nested arrays', () => {
       expect(objectInstance.nestedArray[0].array[0] instanceof NestedClass2).toBeTruthy();
-    })
+    });
+
+    test('object instance without child instances instanceof object', () => {
+      expect(objectWithoutChildInstances instanceof Object).toBeTruthy();
+    });
+
+    test('object instance without child instances in arrays has nested object without instance', () => {
+      expect(objectWithoutChildInstances.nestedArray[0] instanceof Object).toBeTruthy();
+      expect(objectWithoutChildInstances.nestedArray[0] instanceof NestedClass).toBeFalsy();
+    });
+
+    test('object instance without child instances in array item has nested object without instance', () => {
+      expect(objectWithoutChildInstances.nestedArray[0].array[0] instanceof Object).toBeTruthy();
+      expect(objectWithoutChildInstances.nestedArray[0].array[0] instanceof NestedClass2).toBeFalsy();
+    });
 });
