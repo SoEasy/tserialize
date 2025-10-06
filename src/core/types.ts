@@ -1,8 +1,7 @@
 export type TSerializeFunc<T> = (value: T, instance: any, config: TSerializeConfig) => any;
 export type TSerializeConfig = { allowNullValues?: boolean; autoCreateModelForRawData?: boolean; };
 
-export type TDeserializeConfig = {  makeInstance: boolean; };
-export type TDeserializeFunc<T> = (rawValue: any, rawData: any, config: TDeserializeConfig) => T;
+export type TDeserializeFunc<T> = (rawValue: any, rawData?: any) => T;
 
 export interface PropertyMetadata {
     /**

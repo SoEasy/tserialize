@@ -1,5 +1,8 @@
-import { TDeserializeConfig } from './../core/types';
 import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
+
+export interface DeserializeConfig {
+    makeInstance: boolean;
+}
 
 /**
  * Хэлпер для десериализации сырых данных в экземпляр данного класса
@@ -7,7 +10,7 @@ import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
  * @param {{new(...args: any[]): T}} cls - конструктор класса, в экземпляр которого надо превратить данные
  * @returns {T} - экземпляр
  */
-export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }, config: TDeserializeConfig = { makeInstance: true }): T {
+export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }, config: DeserializeConfig = { makeInstance: true }): T {
     const { makeInstance } = config;
     const retVal = makeInstance ? new cls() : {};
     const targetClass = cls.prototype;
@@ -34,7 +37,7 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T },
             const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, data, config) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, data) : jsonValue;
             }
         }
     }
@@ -47,7 +50,7 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T },
             const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, retVal, config) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, retVal) : jsonValue;
             }
         }
     }
