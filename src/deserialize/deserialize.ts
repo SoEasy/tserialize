@@ -1,5 +1,4 @@
-import { TDeserializeConfig } from './../core/types';
-import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
+import { ClassMetaStore, ParentKey, RootMetaStore, TDeserializeConfig } from './../core';
 
 /**
  * Хэлпер для десериализации сырых данных в экземпляр данного класса
@@ -7,8 +6,8 @@ import { ClassMetaStore, ParentKey, RootMetaStore } from './../core';
  * @param {{new(...args: any[]): T}} cls - конструктор класса, в экземпляр которого надо превратить данные
  * @returns {T} - экземпляр
  */
-export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }, config: TDeserializeConfig = { makeInstance: true }): T {
-    const { makeInstance } = config;
+export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T }, config: TDeserializeConfig = { makeInstance: true, makeChildInstance: true }): T {
+    const { makeInstance = true, makeChildInstance = true } = config;
     const retVal = makeInstance ? new cls() : {};
     const targetClass = cls.prototype;
     let metaStore: ClassMetaStore = RootMetaStore.getClassMetaStore(targetClass);
@@ -34,7 +33,10 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T },
             const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, data, config) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, data, {
+                    makeInstance: makeChildInstance,
+                    makeChildInstance
+                }) : jsonValue;
             }
         }
     }
@@ -47,7 +49,10 @@ export function deserialize<T>(data: any, cls: { new (...args: Array<any>): T },
             const jsonName = serializeProps.rawKey;
             const jsonValue = jsonName !== ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, retVal, config) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize ? deserialize(jsonValue, retVal, {
+                    makeInstance: makeChildInstance,
+                    makeChildInstance
+                }) : jsonValue;
             }
         }
     }
