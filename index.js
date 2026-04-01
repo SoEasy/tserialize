@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -87,7 +87,7 @@ var root_store_1 = __webpack_require__(10);
 exports.RootMetaStore = root_store_1.RootMetaStore;
 var consts_1 = __webpack_require__(8);
 exports.ParentKey = consts_1.ParentKey;
-var class_meta_store_1 = __webpack_require__(4);
+var class_meta_store_1 = __webpack_require__(5);
 exports.ClassMetaStore = class_meta_store_1.ClassMetaStore;
 var property_meta_builder_1 = __webpack_require__(9);
 exports.PropertyMetaBuilder = property_meta_builder_1.PropertyMetaBuilder;
@@ -100,7 +100,7 @@ exports.PropertyMetaBuilder = property_meta_builder_1.PropertyMetaBuilder;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var deserialize_1 = __webpack_require__(16);
+var deserialize_1 = __webpack_require__(17);
 exports.deserialize = deserialize_1.deserialize;
 
 
@@ -133,6 +133,17 @@ exports.JsonName = JsonName;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var serialize_1 = __webpack_require__(4);
+exports.serialize = serialize_1.serialize;
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -205,13 +216,13 @@ exports.serialize = serialize;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var utils_1 = __webpack_require__(5);
+var utils_1 = __webpack_require__(6);
 var ClassMetaStore = /** @class */ (function () {
     function ClassMetaStore() {
         /**
@@ -276,7 +287,7 @@ exports.ClassMetaStore = ClassMetaStore;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -309,17 +320,6 @@ exports.clone = clone;
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var serialize_1 = __webpack_require__(3);
-exports.serialize = serialize_1.serialize;
-
-
-/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -328,16 +328,18 @@ exports.serialize = serialize_1.serialize;
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonArray_1 = __webpack_require__(11);
 exports.JsonArray = JsonArray_1.JsonArray;
-var JsonMeta_1 = __webpack_require__(12);
+var JsonMeta_1 = __webpack_require__(13);
 exports.JsonMeta = JsonMeta_1.JsonMeta;
 var JsonName_1 = __webpack_require__(2);
 exports.JsonName = JsonName_1.JsonName;
-var JsonNameReadonly_1 = __webpack_require__(14);
+var JsonNameReadonly_1 = __webpack_require__(15);
 exports.JsonNameReadonly = JsonNameReadonly_1.JsonNameReadonly;
-var JsonStruct_1 = __webpack_require__(15);
+var JsonStruct_1 = __webpack_require__(16);
 exports.JsonStruct = JsonStruct_1.JsonStruct;
-var JsonNameLate_1 = __webpack_require__(13);
+var JsonNameLate_1 = __webpack_require__(14);
 exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
+var JsonDiscriminatedUnion_1 = __webpack_require__(12);
+exports.JsonDescriminatedUnion = JsonDiscriminatedUnion_1.JsonDescriminatedUnion;
 
 
 /***/ }),
@@ -411,8 +413,8 @@ exports.PropertyMetaBuilder = PropertyMetaBuilder;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var class_meta_store_1 = __webpack_require__(4);
-var utils_1 = __webpack_require__(5);
+var class_meta_store_1 = __webpack_require__(5);
+var utils_1 = __webpack_require__(6);
 var RootMetaStore = /** @class */ (function () {
     function RootMetaStore() {
     }
@@ -453,7 +455,7 @@ exports.RootMetaStore = RootMetaStore;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var JsonName_1 = __webpack_require__(2);
-var serialize_1 = __webpack_require__(6);
+var serialize_1 = __webpack_require__(3);
 var deserialize_1 = __webpack_require__(1);
 /**
  * Декоратор для сериализации-десериализации массивов экземпляров.
@@ -499,6 +501,65 @@ exports.JsonArray = JsonArray;
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = __webpack_require__(0);
 var deserialize_1 = __webpack_require__(1);
+var serialize_1 = __webpack_require__(3);
+/**
+ * Декоратор для сериализации/десериализации полей, которые являются объединением по дискриминатору. Позволяет указать массив возможных вариантов с их моделями и ключ дискриминатора, по которому будет происходить выбор модели.
+ * @param discriminators — массив вариантов для объединения, каждый вариант содержит значение дискриминатора и модель, которая соответствует этому значению
+ * @param discriminatorKey — ключ в данных, по которому будет происходить выбор модели
+ * @param rawName — кастомное имя поля, которое будет в сырых данных
+ */
+function JsonDescriminatedUnion(discriminators, discriminatorKey, rawName) {
+    return function (target, propertyKey) {
+        var deserializeFunc = function (value, _, config) {
+            if (value === null) {
+                return null;
+            }
+            var discriminatorValue = value[discriminatorKey];
+            var discriminator = discriminators.find(function (d) { return d.value === discriminatorValue; });
+            if (!discriminator) {
+                throw new Error("Unknown discriminator value: " + discriminatorValue);
+            }
+            var ModelClass = discriminator.model;
+            if (ModelClass.fromServer) {
+                return ModelClass.fromServer(value);
+            }
+            return value !== null ? deserialize_1.deserialize(value, ModelClass, config) : null;
+        };
+        var serializerFunc = function (value, _, config) {
+            if (!value) {
+                return null;
+            }
+            if (value.toServer) {
+                return value.toServer.call(value, config);
+            }
+            var discriminatorValue = value[discriminatorKey];
+            var discriminator = discriminators.find(function (d) { return d.value === discriminatorValue; });
+            if (!discriminator) {
+                throw new Error("Unknown discriminator value: " + discriminatorValue);
+            }
+            var model = value;
+            if (!(model instanceof discriminator.model) && config && config.autoCreateModelForRawData) {
+                model = new discriminator.model();
+                Object.assign(model, value);
+            }
+            return serialize_1.serialize(model, config);
+        };
+        var propertyMetadata = core_1.PropertyMetaBuilder.make(propertyKey, rawName).deserializer(deserializeFunc).serializer(serializerFunc).struct().raw;
+        core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
+    };
+}
+exports.JsonDescriminatedUnion = JsonDescriminatedUnion;
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var core_1 = __webpack_require__(0);
+var deserialize_1 = __webpack_require__(1);
 /**
  * Декоратор без аргументов для объявления структуры, чтобы мапить плоские данные в аггрегированные объекты
  * @returns {(target: object, propertyKey: string) => void} - декоратор
@@ -516,7 +577,7 @@ exports.JsonMeta = JsonMeta;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -544,7 +605,7 @@ exports.JsonNameLate = JsonNameLate;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -565,7 +626,7 @@ exports.JsonNameReadonly = JsonNameReadonly;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -573,7 +634,7 @@ exports.JsonNameReadonly = JsonNameReadonly;
 Object.defineProperty(exports, "__esModule", { value: true });
 var core_1 = __webpack_require__(0);
 var deserialize_1 = __webpack_require__(1);
-var serialize_1 = __webpack_require__(6);
+var serialize_1 = __webpack_require__(3);
 /**
  * Декоратор для сериализаци-дерериализации аггрегированных моделей.
  * Для сериализации использует toServer метод экземпляра.Если его нет - просто serialize.
@@ -612,7 +673,7 @@ exports.JsonStruct = JsonStruct;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -626,8 +687,8 @@ var core_1 = __webpack_require__(0);
  * @returns {T} - экземпляр
  */
 function deserialize(data, cls, config) {
-    if (config === void 0) { config = { makeInstance: true }; }
-    var makeInstance = config.makeInstance;
+    if (config === void 0) { config = { makeInstance: true, makeChildInstance: true }; }
+    var _a = config.makeInstance, makeInstance = _a === void 0 ? true : _a, _b = config.makeChildInstance, makeChildInstance = _b === void 0 ? true : _b;
     var retVal = makeInstance ? new cls() : {};
     var targetClass = cls.prototype;
     var metaStore = core_1.RootMetaStore.getClassMetaStore(targetClass);
@@ -652,20 +713,26 @@ function deserialize(data, cls, config) {
             var jsonName = serializeProps.rawKey;
             var jsonValue = jsonName !== core_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue, data, config) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize_1 ? deserialize_1(jsonValue, data, {
+                    makeInstance: makeChildInstance,
+                    makeChildInstance: makeChildInstance
+                }) : jsonValue;
             }
         }
     }
     // TODO remove duplicate
-    for (var _a = 0, lateFields_1 = lateFields; _a < lateFields_1.length; _a++) {
-        var propertyKey = lateFields_1[_a];
+    for (var _c = 0, lateFields_1 = lateFields; _c < lateFields_1.length; _c++) {
+        var propertyKey = lateFields_1[_c];
         var serializeProps = metaStore.getMetadataByPropertyKey(propertyKey);
         if (serializeProps) {
             var deserialize_2 = serializeProps.deserialize;
             var jsonName = serializeProps.rawKey;
             var jsonValue = jsonName !== core_1.ParentKey ? data[jsonName] : data;
             if (typeof jsonValue !== 'undefined') {
-                retVal[serializeProps.propertyKey] = deserialize_2 ? deserialize_2(jsonValue, retVal, config) : jsonValue;
+                retVal[serializeProps.propertyKey] = deserialize_2 ? deserialize_2(jsonValue, retVal, {
+                    makeInstance: makeChildInstance,
+                    makeChildInstance: makeChildInstance
+                }) : jsonValue;
             }
         }
     }
@@ -675,7 +742,7 @@ exports.deserialize = deserialize;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -688,7 +755,8 @@ exports.JsonNameLate = decorators_1.JsonNameLate;
 exports.JsonNameReadonly = decorators_1.JsonNameReadonly;
 exports.JsonStruct = decorators_1.JsonStruct;
 exports.JsonMeta = decorators_1.JsonMeta;
-var serialize_1 = __webpack_require__(3);
+exports.JsonDescriminatedUnion = decorators_1.JsonDescriminatedUnion;
+var serialize_1 = __webpack_require__(4);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(1);
 exports.deserialize = deserialize_1.deserialize;

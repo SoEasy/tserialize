@@ -3,19 +3,19 @@ import { PropertyMetaBuilder, RootMetaStore } from './../core';
 import { deserialize } from './../deserialize';
 import { serialize } from './../serialize';
 
-type TStatic<M> = {
+export type TStatic<M> = {
   fromServer?: (data: any) => M
 }
 
-type TInstance<T extends string> = {
-  [key in T]: unknown;
+export type TInstance<T extends string> = {
+  [key in T]: any;
 }
 
-type TDisriminatorModel<T extends string> = {
+export type TDisriminatorModel<T extends string> = {
   new(): TInstance<T>;
-} & TStatic<Record<T, unknown>>;
+} & TStatic<Record<T, any>>;
 
-type TDescriminator<T extends string> = {
+export type TDescriminator<T extends string> = {
   value: any;
   model: TDisriminatorModel<T>;
 };
