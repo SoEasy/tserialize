@@ -71,18 +71,18 @@ export function JsonStruct(TargetClass: any, rawName?: string): (target: object,
   */
 export function JsonNameLate<T>(name?: string, serialize?: (value: T, instance: any) => any, deserialize?: (rawValue: any, rawData?: any) => T): (target: object, propertyKey: string) => void;
 
-export type TStatic<M> = {
-    fromServer?: (data: any) => M;
+export type TStatic = {
+    fromServer?: (data: any) => any;
 };
-export type TInstance<T extends string> = {
-    [key in T]: any;
+export type TInstance = {
+    [key: string]: any;
 };
-export type TDisriminatorModel<T extends string> = {
-    new (): TInstance<T>;
-} & TStatic<Record<T, any>>;
-export type TDescriminator<T extends string> = {
+export type TDisriminatorModel = {
+    new (): TInstance;
+} & TStatic;
+export type TDescriminator = {
     value: any;
-    model: TDisriminatorModel<T>;
+    model: TDisriminatorModel;
 };
 /**
   * Декоратор для сериализации/десериализации полей, которые являются объединением по дискриминатору. Позволяет указать массив возможных вариантов с их моделями и ключ дискриминатора, по которому будет происходить выбор модели.
@@ -90,7 +90,7 @@ export type TDescriminator<T extends string> = {
   * @param discriminatorKey — ключ в данных, по которому будет происходить выбор модели
   * @param rawName — кастомное имя поля, которое будет в сырых данных
   */
-export function JsonDescriminatedUnion<T extends string>(discriminators: Array<TDescriminator<T>>, discriminatorKey: T, rawName?: string): (target: object, propertyKey: string) => void;
+export function JsonDescriminatedUnion(discriminators: Array<TDescriminator>, discriminatorKey: string, rawName?: string): (target: object, propertyKey: string) => void;
 
 export type TSerializeFunc<T> = (value: T, instance: any, config: TSerializeConfig) => any;
 export type TSerializeConfig = {
@@ -138,4 +138,3 @@ export interface PropertyMetadata {
 export function deserialize<T>(data: any, cls: {
     new (...args: Array<any>): T;
 }, config?: TDeserializeConfig): T;
-

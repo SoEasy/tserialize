@@ -3,21 +3,21 @@ import { PropertyMetaBuilder, RootMetaStore } from './../core';
 import { deserialize } from './../deserialize';
 import { serialize } from './../serialize';
 
-export type TStatic<M> = {
-  fromServer?: (data: any) => M
+export type TStatic = {
+  fromServer?: (data: any) => any
 }
 
-export type TInstance<T extends string> = {
-  [key in T]: any;
+export type TInstance= {
+  [key: string]: any;
 }
 
-export type TDisriminatorModel<T extends string> = {
-  new(): TInstance<T>;
-} & TStatic<Record<T, any>>;
+export type TDisriminatorModel = {
+  new(): TInstance;
+} & TStatic;
 
-export type TDescriminator<T extends string> = {
+export type TDescriminator = {
   value: any;
-  model: TDisriminatorModel<T>;
+  model: TDisriminatorModel;
 };
 
 /**
@@ -26,7 +26,7 @@ export type TDescriminator<T extends string> = {
  * @param discriminatorKey — ключ в данных, по которому будет происходить выбор модели
  * @param rawName — кастомное имя поля, которое будет в сырых данных
  */
-export function JsonDescriminatedUnion<T extends string>(discriminators: Array<TDescriminator<T>>, discriminatorKey: T, rawName?: string) {
+export function JsonDescriminatedUnion(discriminators: Array<TDescriminator>, discriminatorKey: string, rawName?: string) {
   return (target: object, propertyKey: string): void => {
 
     const deserializeFunc = (value: any, _: any, config?: TDeserializeConfig) => {
