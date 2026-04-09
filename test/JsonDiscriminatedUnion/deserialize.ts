@@ -1,4 +1,4 @@
-import { JsonName, JsonDescriminatedUnion, deserialize } from '../../src';
+import { JsonName, JsonDiscriminatedUnion, deserialize } from '../../src';
 
 class Descriminator1 {
   @JsonName()
@@ -17,7 +17,7 @@ class Descriminator2 {
 }
 
 class Model {
-  @JsonDescriminatedUnion([
+  @JsonDiscriminatedUnion([
     { value: 'type1', model: Descriminator1 },
     { value: 'type2', model: Descriminator2 }
   ], 'kind')
@@ -66,10 +66,10 @@ describe('JsonDescriminatedUnion deserialize case', () => {
   test('should deserialize with custom name', () => {
 
     class CustomNameModel {
-      @JsonDescriminatedUnion([
+      @JsonDiscriminatedUnion([
         { value: 'type1', model: Descriminator1 },
         { value: 'type2', model: Descriminator2 }
-      ], 'kind', 'union_field')
+      ], 'kind', undefined, 'union_field')
       unionField: Descriminator1 | Descriminator2;
     }
 

@@ -339,7 +339,7 @@ exports.JsonStruct = JsonStruct_1.JsonStruct;
 var JsonNameLate_1 = __webpack_require__(14);
 exports.JsonNameLate = JsonNameLate_1.JsonNameLate;
 var JsonDiscriminatedUnion_1 = __webpack_require__(12);
-exports.JsonDescriminatedUnion = JsonDiscriminatedUnion_1.JsonDescriminatedUnion;
+exports.JsonDiscriminatedUnion = JsonDiscriminatedUnion_1.JsonDiscriminatedUnion;
 
 
 /***/ }),
@@ -508,7 +508,7 @@ var serialize_1 = __webpack_require__(3);
  * @param discriminatorKey — ключ в данных, по которому будет происходить выбор модели
  * @param rawName — кастомное имя поля, которое будет в сырых данных
  */
-function JsonDescriminatedUnion(discriminators, discriminatorKey, rawName) {
+function JsonDiscriminatedUnion(discriminators, discriminatorKey, serializeDiscriminatorKey, rawName) {
     return function (target, propertyKey) {
         var deserializeFunc = function (value, _, config) {
             if (value === null) {
@@ -532,7 +532,7 @@ function JsonDescriminatedUnion(discriminators, discriminatorKey, rawName) {
             if (value.toServer) {
                 return value.toServer.call(value, config);
             }
-            var discriminatorValue = value[discriminatorKey];
+            var discriminatorValue = value[serializeDiscriminatorKey || discriminatorKey];
             var discriminator = discriminators.find(function (d) { return d.value === discriminatorValue; });
             if (!discriminator) {
                 throw new Error("Unknown discriminator value: " + discriminatorValue);
@@ -548,7 +548,7 @@ function JsonDescriminatedUnion(discriminators, discriminatorKey, rawName) {
         core_1.RootMetaStore.setupPropertyMetadata(target, propertyMetadata);
     };
 }
-exports.JsonDescriminatedUnion = JsonDescriminatedUnion;
+exports.JsonDiscriminatedUnion = JsonDiscriminatedUnion;
 
 
 /***/ }),
@@ -755,7 +755,7 @@ exports.JsonNameLate = decorators_1.JsonNameLate;
 exports.JsonNameReadonly = decorators_1.JsonNameReadonly;
 exports.JsonStruct = decorators_1.JsonStruct;
 exports.JsonMeta = decorators_1.JsonMeta;
-exports.JsonDescriminatedUnion = decorators_1.JsonDescriminatedUnion;
+exports.JsonDiscriminatedUnion = decorators_1.JsonDiscriminatedUnion;
 var serialize_1 = __webpack_require__(4);
 exports.serialize = serialize_1.serialize;
 var deserialize_1 = __webpack_require__(1);

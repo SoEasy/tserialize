@@ -77,12 +77,12 @@ export type TStatic = {
 export type TInstance = {
     [key: string]: any;
 };
-export type TDisriminatorModel = {
+export type TDiscriminatorModel = {
     new (): TInstance;
 } & TStatic;
-export type TDescriminator = {
+export type TDiscriminator = {
     value: any;
-    model: TDisriminatorModel;
+    model: TDiscriminatorModel;
 };
 /**
   * Декоратор для сериализации/десериализации полей, которые являются объединением по дискриминатору. Позволяет указать массив возможных вариантов с их моделями и ключ дискриминатора, по которому будет происходить выбор модели.
@@ -90,7 +90,7 @@ export type TDescriminator = {
   * @param discriminatorKey — ключ в данных, по которому будет происходить выбор модели
   * @param rawName — кастомное имя поля, которое будет в сырых данных
   */
-export function JsonDescriminatedUnion(discriminators: Array<TDescriminator>, discriminatorKey: string, rawName?: string): (target: object, propertyKey: string) => void;
+export function JsonDiscriminatedUnion(discriminators: Array<TDiscriminator>, discriminatorKey: string, serializeDiscriminatorKey?: string, rawName?: string): (target: object, propertyKey: string) => void;
 
 export type TSerializeFunc<T> = (value: T, instance: any, config: TSerializeConfig) => any;
 export type TSerializeConfig = {
@@ -138,3 +138,40 @@ export interface PropertyMetadata {
 export function deserialize<T>(data: any, cls: {
     new (...args: Array<any>): T;
 }, config?: TDeserializeConfig): T;
+
+export class RootMetaStore {
+    static store: Map<any, ClassMetaStore>;
+    static setupPropertyMetadata(targetClass: any, propertyMetadata: PropertyMetadata): void;
+    static updateClassMetaByParent(targetClass: any): void;
+    static getClassMetaStore(targetClass: any): ClassMetaStore;
+}
+
+export const ParentKey: string;
+
+export class ClassMetaStore {
+        /**
+            * Хранилище метаданных для полей класса
+            */
+        propertiesMetaStore: Record<string, PropertyMetadata>;
+        addPropertyMetadata(propertyMetadata: PropertyMetadata): void;
+        readonly propertyKeys: Array<string>;
+        /**
+            * Получить метаданные поля по ключу нативного экземпляра. Нужно для сериализации
+            */
+        getMetadataByPropertyKey(propertyKey: string): PropertyMetadata;
+        /**
+            * Получить метаданные поля по ключу сырых данных. Нужно для десериализации
+            */
+        getMetadataByRawKey(rawKey: string): PropertyMetadata;
+        updateWithParentStore(parentStore: ClassMetaStore): void;
+}
+
+export class PropertyMetaBuilder {
+    static make(propertyKey: string, name?: string): PropertyMetaBuilder;
+    struct(): PropertyMetaBuilder;
+    late(): PropertyMetaBuilder;
+    serializer(serializeFunc?: TSerializeFunc<any>): PropertyMetaBuilder;
+    deserializer(deserializeFunc?: TDeserializeFunc<any>): PropertyMetaBuilder;
+    readonly raw: PropertyMetadata;
+}
+
