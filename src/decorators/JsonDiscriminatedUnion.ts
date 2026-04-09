@@ -11,13 +11,13 @@ export type TInstance= {
   [key: string]: any;
 }
 
-export type TDisriminatorModel = {
+export type TDiscriminatorModel = {
   new(): TInstance;
 } & TStatic;
 
-export type TDescriminator = {
+export type TDiscriminator = {
   value: any;
-  model: TDisriminatorModel;
+  model: TDiscriminatorModel;
 };
 
 /**
@@ -26,7 +26,7 @@ export type TDescriminator = {
  * @param discriminatorKey — ключ в данных, по которому будет происходить выбор модели
  * @param rawName — кастомное имя поля, которое будет в сырых данных
  */
-export function JsonDescriminatedUnion(discriminators: Array<TDescriminator>, discriminatorKey: string, rawName?: string) {
+export function JsonDiscriminatedUnion(discriminators: Array<TDiscriminator>, discriminatorKey: string, serializeDiscriminatorKey?: string, rawName?: string) {
   return (target: object, propertyKey: string): void => {
 
     const deserializeFunc = (value: any, _: any, config?: TDeserializeConfig) => {
@@ -59,7 +59,7 @@ export function JsonDescriminatedUnion(discriminators: Array<TDescriminator>, di
         return value.toServer.call(value, config);
       }
 
-      const discriminatorValue = value[discriminatorKey];
+      const discriminatorValue = value[serializeDiscriminatorKey || discriminatorKey];
       const discriminator = discriminators.find(d => d.value === discriminatorValue);
 
       if (!discriminator) {
